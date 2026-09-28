@@ -420,7 +420,8 @@
 .gallerySection {
   margin-top: 60px;
   width: 100%;
-  padding: 0 24px 100px; /* Left/Right padding 24px */
+  padding: 0 24px 100px;
+  /* Left/Right padding 24px */
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -574,7 +575,7 @@
   left: 0;
   right: 0;
   padding: 32px 16px 16px;
-  background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 40%, transparent 100%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.7) 40%, transparent 100%);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -586,17 +587,19 @@
   font-weight: 700;
   color: #fff;
   margin: 0;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .personaDesc {
   font-size: 0.8rem;
-  color: #d4d4d8; /* light gray */
+  color: #d4d4d8;
+  /* light gray */
   margin: 0 0 6px 0;
   line-height: 1.3;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   display: -webkit-box;
-  -webkit-line-clamp: 2; /* max 2 lines */
+  -webkit-line-clamp: 2;
+  /* max 2 lines */
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -611,7 +614,8 @@
 .resumeBtn {
   flex: 1;
   padding: 8px 12px;
-  background: #6366f1; /* Purple button */
+  background: #6366f1;
+  /* Purple button */
   border: 1px solid #6366f1;
   border-radius: 999px;
   color: #fff;
@@ -634,7 +638,8 @@
   justify-content: center;
   background: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 50%; /* Perfect circle */
+  border-radius: 50%;
+  /* Perfect circle */
   color: #fff;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -645,13 +650,34 @@
   transform: translateY(-1px);
 }
 
+.deleteBtn {
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 50%;
+  color: #f87171;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.deleteBtn:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: #ef4444;
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+}
+
 .galleryCardWideContent {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
   padding: 24px;
-  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, transparent 100%);
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
@@ -663,7 +689,7 @@
   color: #eab308;
   margin: 0;
   line-height: 1.1;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
 }
 
 .wideCardTag {

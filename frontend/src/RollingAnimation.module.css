@@ -7,7 +7,7 @@
 */
 .rollingSection {
   position: absolute;
-  top: calc(72vh + 180px); /* Pushed down exactly 180px from baseline */
+  top: calc(72vh + 188px);
   left: 0;
   width: 100vw;
   height: 520px;

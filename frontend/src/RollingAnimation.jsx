@@ -31,15 +31,15 @@ export default function RollingAnimation() {
           preserveAspectRatio="xMidYMid meet"
         >
           <defs>
-            {/* Upper S — starts top-left, curves smoothly into the center */}
+            {/* Upper wave — enters left, crests, slopes into center capsule (960, 260) */}
             <path
               id="path-in"
-              d="M -100 50 C 400 50, 600 260, 960 260"
+              d="M -100 150 C 200 60, 620 170, 960 260"
             />
-            {/* Lower S — starts at center, curves smoothly to bottom-right */}
+            {/* Lower wave — continues from (960, 260) with identical slope, valleys, and swoops up to the right */}
             <path
               id="path-out"
-              d="M 960 260 C 1320 260, 1520 470, 2020 470"
+              d="M 960 260 C 1300 350, 1650 400, 2020 220"
             />
           </defs>
 

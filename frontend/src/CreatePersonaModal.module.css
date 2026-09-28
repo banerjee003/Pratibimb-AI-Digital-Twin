@@ -20,6 +20,7 @@
     backdrop-filter: blur(0px) saturate(100%);
     -webkit-backdrop-filter: blur(0px) saturate(100%);
   }
+
   to {
     opacity: 1;
     backdrop-filter: blur(20px) saturate(180%);
@@ -43,6 +44,7 @@
     opacity: 0;
     transform: scale(0.75) translateY(14px);
   }
+
   to {
     opacity: 1;
     transform: scale(0.8) translateY(0);
@@ -67,6 +69,7 @@
 .modalCard::-webkit-scrollbar {
   width: 6px;
 }
+
 .modalCard::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.15);
   border-radius: 3px;
@@ -283,7 +286,8 @@
 .dropzoneBox {
   border: 1px solid rgba(0, 0, 0, 0.05);
   border-radius: 20px;
-  background: #E5F0FF; /* Light blue tint */
+  background: #E5F0FF;
+  /* Light blue tint */
   padding: 32px 20px;
   display: flex;
   align-items: center;
@@ -309,7 +313,8 @@
 
 .dropzoneBox:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(10, 132, 255, 0.12); /* Tinted shadow */
+  box-shadow: 0 8px 24px rgba(10, 132, 255, 0.12);
+  /* Tinted shadow */
 }
 
 .dropzoneBox:active {
@@ -326,7 +331,8 @@
 }
 
 .dropzoneIcon {
-  color: #0A84FF; /* Tint color */
+  color: #0A84FF;
+  /* Tint color */
   margin-bottom: 2px;
 }
 
@@ -400,7 +406,7 @@
   cursor: pointer;
   overflow: hidden;
   transition: transform 0.15s ease, box-shadow 0.2s ease;
-  border: 1px solid rgba(0,0,0,0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .audioCardYellow:hover,
@@ -415,8 +421,10 @@
 }
 
 .audioCardYellow {
-  background: #FFF1CD; /* Light yellow */
+  background: #FFF1CD;
+  /* Light yellow */
 }
+
 .audioCardYellow::before {
   content: '';
   position: absolute;
@@ -431,8 +439,10 @@
 }
 
 .audioCardPurple {
-  background: #E0DAFC; /* Light purple */
+  background: #E0DAFC;
+  /* Light purple */
 }
+
 .audioCardPurple::before {
   content: '';
   position: absolute;
@@ -492,6 +502,7 @@
 .audioCardArrow {
   color: #4C3CDE;
 }
+
 .audioCardYellow .audioCardArrow {
   color: #0F172A;
 }
@@ -543,8 +554,17 @@
 }
 
 @keyframes recDotPulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.3; transform: scale(0.7); }
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.3;
+    transform: scale(0.7);
+  }
 }
 
 .recordingTimeMax {
@@ -560,7 +580,8 @@
   justify-content: center;
   gap: 2.5px;
   flex: 1;
-  padding: 0 48px 0 4px; /* right padding leaves space for stop btn */
+  padding: 0 48px 0 4px;
+  /* right padding leaves space for stop btn */
 }
 
 .waveformBar {
@@ -578,18 +599,22 @@
     height: 3px;
     opacity: 0.5;
   }
+
   25% {
     height: 20px;
     opacity: 0.8;
   }
+
   50% {
     height: 44px;
     opacity: 1;
   }
+
   75% {
     height: 18px;
     opacity: 0.75;
   }
+
   100% {
     height: 6px;
     opacity: 0.55;
@@ -632,6 +657,211 @@
   border-radius: 2px;
 }
 
+/* Voice Audio Player Preview Card */
+.voicePlayerCard {
+  background: #ffffff;
+  border: 1px solid #c9cdd6;
+  border-radius: 16px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.voicePlayerCard:hover {
+  border-color: #0A84FF;
+  box-shadow: 0 4px 14px rgba(10, 132, 255, 0.12);
+}
+
+.voicePlayerTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.voicePlayerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.voicePlayBtn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #0A84FF;
+  border: none;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(10, 132, 255, 0.35);
+}
+
+.voicePlayBtn:hover {
+  background: #0070E0;
+  transform: scale(1.06);
+}
+
+.voicePlayBtn:active {
+  transform: scale(0.94);
+}
+
+.voicePlayBtnActive {
+  background: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+.playIconOffset {
+  margin-left: 2px;
+}
+
+.voiceInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.voiceTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.voiceWaveIcon {
+  color: #64748B;
+  flex-shrink: 0;
+}
+
+.voiceWaveIconActive {
+  color: #0A84FF;
+  flex-shrink: 0;
+  animation: pulseIcon 1.2s infinite ease-in-out;
+}
+
+@keyframes pulseIcon {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+.voicePlayerTitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #0F172A;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+.voiceBadgeSaved {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 99px;
+  background: #ECFDF5;
+  color: #059669;
+  border: 1px solid #A7F3D0;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.voiceBadgeNew {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 99px;
+  background: #FEF3C7;
+  color: #D97706;
+  border: 1px solid #FDE68A;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.voicePlayerMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.voiceTimer {
+  font-size: 0.75rem;
+  color: #64748B;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+/* Mini Equalizer Animation */
+.miniWaveform {
+  display: flex;
+  align-items: flex-end;
+  gap: 2.5px;
+  height: 12px;
+}
+
+.miniBar {
+  width: 2.5px;
+  background: #0A84FF;
+  border-radius: 1px;
+  animation: miniBarBounce 0.75s ease-in-out infinite alternate;
+}
+
+.miniBar:nth-child(1) { height: 4px; animation-delay: 0.1s; }
+.miniBar:nth-child(2) { height: 11px; animation-delay: 0.3s; }
+.miniBar:nth-child(3) { height: 6px; animation-delay: 0.18s; }
+.miniBar:nth-child(4) { height: 12px; animation-delay: 0.42s; }
+.miniBar:nth-child(5) { height: 5px; animation-delay: 0.15s; }
+
+@keyframes miniBarBounce {
+  0% { height: 3px; }
+  100% { height: 12px; }
+}
+
+.voiceProgressTrack {
+  width: 100%;
+  height: 5px;
+  background: #E2E8F0;
+  border-radius: 99px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: height 0.15s ease;
+}
+
+.voiceProgressTrack:hover {
+  height: 7px;
+}
+
+.voiceProgressBar {
+  height: 100%;
+  background: #0A84FF;
+  border-radius: 99px;
+  transition: width 0.08s linear;
+}
+
+.voiceErrorNotice {
+  font-size: 0.75rem;
+  color: #DC2626;
+  background: #FEE2E2;
+  border: 1px solid #FCA5A5;
+  padding: 6px 10px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
 /* Uploaded file indicator */
 .uploadedVoiceFile {
   display: flex;
@@ -641,7 +871,8 @@
   padding: 8px 12px;
   border-radius: 10px;
   border: 1px solid #c9cdd6;
-  margin-top: -6px; /* slightly pull up toward the grid */
+  margin-top: -6px;
+  /* slightly pull up toward the grid */
 }
 
 .voiceActiveIcon {
@@ -726,7 +957,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Success box */
@@ -761,14 +994,22 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (max-width: 540px) {
   .row {
     grid-template-columns: 1fr;
   }
+
   .modalCard {
     padding: 20px 16px 18px;
   }

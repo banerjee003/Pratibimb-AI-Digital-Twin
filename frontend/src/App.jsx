@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Filter, LayoutGrid, Star, User, Briefcase, Sparkles, Plus, PenLine, LogOut } from 'lucide-react';
+import { Filter, LayoutGrid, Star, User, Briefcase, Sparkles, Plus, PenLine, LogOut, Trash2 } from 'lucide-react';
 import SearchBar from './SearchBar';
 import AuthPage from './AuthPage';
 import CreatePersonaModal from './CreatePersonaModal';
+import DeletePersonaModal from './DeletePersonaModal';
 import RollingAnimation from './RollingAnimation';
 import LoadingScreen from './LoadingScreen';
 import ChatPage from './ChatPage';
@@ -25,7 +26,7 @@ function ParticleCanvas() {
 
     function resize() {
       if (!canvas) return;
-      W = canvas.width  = window.innerWidth;
+      W = canvas.width = window.innerWidth;
       H = canvas.height = window.innerHeight;
     }
 
@@ -41,12 +42,12 @@ function ParticleCanvas() {
     function spawnParticle() {
       const color = COLORS[Math.floor(Math.random() * COLORS.length)];
       return {
-        x:    randomBetween(0, W),
-        y:    randomBetween(0, H),
-        r:    randomBetween(1, 2.4),
-        dx:   randomBetween(-0.18, 0.18),
-        dy:   randomBetween(-0.28, -0.08),   // always drift upward gently
-        alpha:randomBetween(0.08, 0.38),
+        x: randomBetween(0, W),
+        y: randomBetween(0, H),
+        r: randomBetween(1, 2.4),
+        dx: randomBetween(-0.18, 0.18),
+        dy: randomBetween(-0.28, -0.08),   // always drift upward gently
+        alpha: randomBetween(0.08, 0.38),
         color,
         life: 0,
         maxLife: randomBetween(220, 520),
@@ -64,20 +65,20 @@ function ParticleCanvas() {
 
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
-        p.x   += p.dx;
-        p.y   += p.dy;
+        p.x += p.dx;
+        p.y += p.dy;
         p.life += 1;
 
         const t = p.life / p.maxLife;
         const fade = t < 0.15 ? t / 0.15
-                   : t > 0.80 ? (1 - t) / 0.20
-                   : 1;
+          : t > 0.80 ? (1 - t) / 0.20
+            : 1;
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx.fillStyle = p.color + (p.alpha * fade).toFixed(3) + ')';
         ctx.shadowColor = p.color + '0.6)';
-        ctx.shadowBlur  = 6;
+        ctx.shadowBlur = 6;
         ctx.fill();
 
         if (p.life >= p.maxLife) {
@@ -101,6 +102,33 @@ function ParticleCanvas() {
   return <canvas ref={canvasRef} className={styles.particles} aria-hidden="true" />;
 }
 
+const DEMO_PERSONAS = [
+  {
+    id: 'demo-sarah',
+    name: 'Sarah (Empathetic Listener)',
+    notes: 'A supportive friend ready to listen and give thoughtful, warm advice on any topic.',
+    photo_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400',
+    tone: 'Empathetic & Warm',
+    language: 'en'
+  },
+  {
+    id: 'demo-marcus',
+    name: 'Marcus (Tech Mentor)',
+    notes: 'An experienced senior developer who helps debug code and explains architecture.',
+    photo_url: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=400',
+    tone: 'Professional & Formal',
+    language: 'en'
+  },
+  {
+    id: 'demo-elena',
+    name: 'Elena (Language Tutor)',
+    notes: 'A strict but patient Spanish teacher who corrects your grammar in real-time.',
+    photo_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400',
+    tone: 'Enthusiastic & Energetic',
+    language: 'es'
+  }
+];
+
 /* ── App ─────────────────────────────────────────────────────── */
 export default function App() {
   const getInitialModal = () => {
@@ -113,6 +141,7 @@ export default function App() {
   const [authModal, setAuthModal] = useState(getInitialModal);
   const [isPersonaModalOpen, setIsPersonaModalOpen] = useState(false);
   const [editingPersona, setEditingPersona] = useState(null);
+  const [deletingPersona, setDeletingPersona] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeChat, setActiveChat] = useState(null);
 
@@ -122,6 +151,63 @@ export default function App() {
   const [personas, setPersonas] = useState([]);
   const [loadingPersonas, setLoadingPersonas] = useState(false);
 
+  const startChat = (persona, initialText = null) => {
+    if (!persona) return;
+    const photoUrl = persona.photo_url
+      ? (persona.photo_url.startsWith('http') ? persona.photo_url : `${API}${persona.photo_url}`)
+      : (persona.image || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400');
+
+    setActiveChat({
+      ...persona,
+      image: photoUrl,
+      initialMessage: initialText
+    });
+
+    try {
+      localStorage.setItem('active_persona_id', String(persona.id));
+      const url = new URL(window.location);
+      url.searchParams.set('chat', String(persona.id));
+      window.history.replaceState(null, '', url);
+    } catch (e) {
+      console.warn('Could not save active chat:', e);
+    }
+  };
+
+  const handleCloseChat = () => {
+    setActiveChat(null);
+    try {
+      localStorage.removeItem('active_persona_id');
+      const url = new URL(window.location);
+      url.searchParams.delete('chat');
+      window.history.replaceState(null, '', url);
+    } catch (e) {
+      console.warn('Could not clear active chat:', e);
+    }
+  };
+
+  const restoreActiveChat = (personaList) => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const targetChatId = params.get('chat') || localStorage.getItem('active_persona_id');
+      if (!targetChatId) return;
+
+      if (targetChatId.startsWith('demo-')) {
+        const demo = DEMO_PERSONAS.find((p) => p.id === targetChatId);
+        if (demo) startChat(demo);
+        return;
+      }
+
+      if (Array.isArray(personaList) && personaList.length > 0) {
+        const matched = personaList.find((p) => String(p.id) === String(targetChatId));
+        if (matched) {
+          startChat(matched);
+        }
+      }
+    } catch (e) {
+      console.warn('Error restoring active chat:', e);
+    }
+  };
+
   const fetchPersonas = async (token) => {
     try {
       setLoadingPersonas(true);
@@ -130,7 +216,10 @@ export default function App() {
       });
       if (res.ok) {
         const data = await res.json();
-        setPersonas(Array.isArray(data) ? data : []);
+        const list = Array.isArray(data) ? data : [];
+        list.sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
+        setPersonas(list);
+        restoreActiveChat(list);
       }
     } catch (err) {
       console.error('Failed to load personas:', err);
@@ -140,6 +229,14 @@ export default function App() {
   };
 
   useEffect(() => {
+    // Check initial demo chat restore before auth loads
+    const params = new URLSearchParams(window.location.search);
+    const targetChatId = params.get('chat') || localStorage.getItem('active_persona_id');
+    if (targetChatId && targetChatId.startsWith('demo-')) {
+      const demo = DEMO_PERSONAS.find((p) => p.id === targetChatId);
+      if (demo) startChat(demo);
+    }
+
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setUser(data.session?.user ?? null);
@@ -184,7 +281,7 @@ export default function App() {
     setSession(null);
     setUser(null);
     setPersonas([]);
-    setActiveChat(null);
+    handleCloseChat();
   };
 
   const openCreateModal = () => {
@@ -193,18 +290,6 @@ export default function App() {
       return;
     }
     setIsPersonaModalOpen(true);
-  };
-
-  const startChat = (persona, initialText = null) => {
-    const photoUrl = persona.photo_url
-      ? (persona.photo_url.startsWith('http') ? persona.photo_url : `${API}${persona.photo_url}`)
-      : 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400';
-
-    setActiveChat({
-      ...persona,
-      image: photoUrl,
-      initialMessage: initialText
-    });
   };
 
   const handleSubmit = ({ text, files }) => {
@@ -253,46 +338,59 @@ export default function App() {
     setIsPersonaModalOpen(false);
   };
 
+  const handlePersonaDeleted = (deletedId) => {
+    setPersonas((prev) => prev.filter((p) => p.id !== deletedId));
+    setActiveChat((prev) => {
+      if (prev?.id === deletedId) {
+        handleCloseChat();
+        return null;
+      }
+      return prev;
+    });
+    setEditingPersona((prev) => (prev?.id === deletedId ? null : prev));
+    setDeletingPersona(null);
+  };
+
   return (
     <>
       {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
-      
+
       <div className={styles.page}>
         {/* Background Visual Elements */}
-      <ParticleCanvas />
-      <div className={styles.blob1} aria-hidden="true" />
-      <div className={styles.blob2} aria-hidden="true" />
-      <div className={styles.blob3} aria-hidden="true" />
-      <div className={styles.grid} aria-hidden="true" />
+        <ParticleCanvas />
+        <div className={styles.blob1} aria-hidden="true" />
+        <div className={styles.blob2} aria-hidden="true" />
+        <div className={styles.blob3} aria-hidden="true" />
+        <div className={styles.grid} aria-hidden="true" />
 
-      {/* ── Floating Rolling Animation ── */}
-      <RollingAnimation />
+        {/* ── Floating Rolling Animation ── */}
+        <RollingAnimation />
 
-      {/* ── Navbar (52px transparent) ── */}
-      <header className={styles.header}>
-        <a
-          href="/"
-          className={styles.logo}
-          onClick={(e) => {
-            e.preventDefault();
-            closeAuth();
-          }}
-        >
-          <img
-            src="/logo.png?v=4"
-            alt="Pratibimb"
-            className={styles.logoImg}
-            onError={(e) => {
-              e.target.style.display = 'none';
-              const span = document.createElement('span');
-              span.textContent = 'Pratibimb';
-              span.className = styles.logoFallback;
-              e.target.parentNode.appendChild(span);
+        {/* ── Navbar (52px transparent) ── */}
+        <header className={styles.header}>
+          <a
+            href="/"
+            className={styles.logo}
+            onClick={(e) => {
+              e.preventDefault();
+              closeAuth();
             }}
-          />
-        </a>
+          >
+            <img
+              src="/logo.png?v=4"
+              alt="Pratibimb"
+              className={styles.logoImg}
+              onError={(e) => {
+                e.target.style.display = 'none';
+                const span = document.createElement('span');
+                span.textContent = 'Pratibimb';
+                span.className = styles.logoFallback;
+                e.target.parentNode.appendChild(span);
+              }}
+            />
+          </a>
 
-        <nav className={styles.nav}>
+          <nav className={styles.nav}>
             {user ? (
               <>
                 <div className={styles.userBadge}>
@@ -343,17 +441,17 @@ export default function App() {
           {/* Trust row */}
           <div className={styles.trustRow}>
             <span className={styles.trustItem}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
               No credit card required
             </span>
             <span className={styles.trustDivider}>·</span>
             <span className={styles.trustItem}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
               End-to-end encrypted
             </span>
             <span className={styles.trustDivider}>·</span>
             <span className={styles.trustItem}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
               Privacy first
             </span>
           </div>
@@ -364,7 +462,7 @@ export default function App() {
           <div className={styles.galleryHeader}>
             <h2 className={styles.galleryTitle}>{user ? 'Your Personas' : 'Gallery'}</h2>
           </div>
-          
+
           <div className={styles.filterScroll}>
             <div className={styles.filterGroupLeft}>
               <button className={styles.filterBtn}>
@@ -402,32 +500,7 @@ export default function App() {
               </div>
             )}
 
-            {(user && personas.length > 0 ? personas : (user ? [] : [
-              {
-                id: 'demo-sarah',
-                name: 'Sarah (Empathetic Listener)',
-                notes: 'A supportive friend ready to listen and give thoughtful, warm advice on any topic.',
-                photo_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400',
-                tone: 'Empathetic & Warm',
-                language: 'en'
-              },
-              {
-                id: 'demo-marcus',
-                name: 'Marcus (Tech Mentor)',
-                notes: 'An experienced senior developer who helps debug code and explains architecture.',
-                photo_url: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=400',
-                tone: 'Professional & Formal',
-                language: 'en'
-              },
-              {
-                id: 'demo-elena',
-                name: 'Elena (Language Tutor)',
-                notes: 'A strict but patient Spanish teacher who corrects your grammar in real-time.',
-                photo_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400',
-                tone: 'Enthusiastic & Energetic',
-                language: 'es'
-              }
-            ])).map((p) => {
+            {(user && personas.length > 0 ? personas : (user ? [] : DEMO_PERSONAS)).map((p) => {
               const photo = p.photo_url
                 ? (p.photo_url.startsWith('http') ? p.photo_url : `${API}${p.photo_url}`)
                 : 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400';
@@ -455,6 +528,19 @@ export default function App() {
                       >
                         <PenLine size={16} />
                       </button>
+                      {user && !p.id.startsWith('demo-') && (
+                        <button
+                          className={styles.deleteBtn}
+                          title="Delete Persona"
+                          aria-label="Delete Persona"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeletingPersona(p);
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -463,38 +549,47 @@ export default function App() {
           </div>
         </section>
 
-      {/* ── Auth Modal Popup with Backdrop Blur Overlay ── */}
-      {authModal && (
-        <AuthPage
-          initialMode={authModal}
-          onClose={closeAuth}
-          onModeChange={(newMode) => {
-            setAuthModal(newMode);
-            window.location.hash = `#${newMode}`;
-          }}
-        />
-      )}
+        {/* ── Auth Modal Popup with Backdrop Blur Overlay ── */}
+        {authModal && (
+          <AuthPage
+            initialMode={authModal}
+            onClose={closeAuth}
+            onModeChange={(newMode) => {
+              setAuthModal(newMode);
+              window.location.hash = `#${newMode}`;
+            }}
+          />
+        )}
 
-      {/* ── Create / Edit Persona Modal Popup ── */}
-      <CreatePersonaModal
-        isOpen={isPersonaModalOpen || !!editingPersona}
-        editingPersona={editingPersona}
-        onClose={() => {
-          setIsPersonaModalOpen(false);
-          setEditingPersona(null);
-        }}
-        onCreated={handlePersonaSaved}
-      />
-      
-      {/* ── Chat Page Override ── */}
-      {activeChat && (
-        <ChatPage
-          persona={activeChat}
-          onClose={() => setActiveChat(null)}
-          onEditPersona={handleEditPersona}
+        {/* ── Create / Edit Persona Modal Popup ── */}
+        <CreatePersonaModal
+          isOpen={isPersonaModalOpen || !!editingPersona}
+          editingPersona={editingPersona}
+          onClose={() => {
+            setIsPersonaModalOpen(false);
+            setEditingPersona(null);
+          }}
+          onCreated={handlePersonaSaved}
+          onDelete={(p) => setDeletingPersona(p)}
         />
-      )}
-    </div>
+
+        {/* ── Delete Persona Confirmation Modal ── */}
+        <DeletePersonaModal
+          isOpen={!!deletingPersona}
+          persona={deletingPersona}
+          onClose={() => setDeletingPersona(null)}
+          onDeleted={handlePersonaDeleted}
+        />
+
+        {/* ── Chat Page Override ── */}
+        {activeChat && (
+          <ChatPage
+            persona={activeChat}
+            onClose={handleCloseChat}
+            onEditPersona={handleEditPersona}
+          />
+        )}
+      </div>
     </>
   );
 }

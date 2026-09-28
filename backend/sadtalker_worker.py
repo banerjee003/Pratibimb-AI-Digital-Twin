@@ -43,6 +43,12 @@ if FFMPEG_BIN:
 os.chdir(str(SADTALKER_DIR))
 sys.path.insert(0, str(SADTALKER_DIR))
 
+# Windows Application Control / Smart App Control blocks unsigned sklearn C-extension DLLs.
+# SadTalker uses librosa only for audio FFT / resampling and never invokes sklearn manifold/clustering.
+# Mocking sklearn.manifold._utils allows librosa to initialize cleanly without triggering DLL load failure.
+from unittest.mock import MagicMock
+sys.modules['sklearn.manifold._utils'] = MagicMock()
+
 import torch
 from src.utils.init_path import init_path
 from src.utils.preprocess import CropAndExtract
@@ -52,6 +58,54 @@ from src.generate_batch import get_data
 from src.generate_facerender_batch import get_facerender_data
 import src.utils.videoio as videoio_mod
 import src.facerender.animate as animate_mod
+import src.facerender.modules.make_animation as make_anim_mod
+from src.facerender.modules.make_animation import keypoint_transformation
+from tqdm import tqdm
+
+CURRENT_JOB_ID = None
+
+class JobCancelledException(Exception):
+    pass
+
+def _make_animation_cancellable(
+    source_image, source_semantics, target_semantics,
+    generator, kp_detector, he_estimator, mapping, 
+    yaw_c_seq=None, pitch_c_seq=None, roll_c_seq=None,
+    use_exp=True, use_half=False
+):
+    with torch.no_grad():
+        predictions = []
+
+        kp_canonical = kp_detector(source_image)
+        he_source = mapping(source_semantics)
+        kp_source = keypoint_transformation(kp_canonical, he_source)
+    
+        total_frames = target_semantics.shape[1]
+        for frame_idx in tqdm(range(total_frames), desc="Face Renderer"):
+            # Check cancellation every 2 frames for instant abort
+            if frame_idx % 2 == 0 and CURRENT_JOB_ID and is_job_cancelled(CURRENT_JOB_ID):
+                print(f"\n[SadTalker Worker] Cancel signal received at frame {frame_idx}/{total_frames}! Aborting face render immediately.", flush=True)
+                raise JobCancelledException(f"Job {CURRENT_JOB_ID} was cancelled by user")
+
+            target_semantics_frame = target_semantics[:, frame_idx]
+            he_driving = mapping(target_semantics_frame)
+            if yaw_c_seq is not None:
+                he_driving['yaw_in'] = yaw_c_seq[:, frame_idx]
+            if pitch_c_seq is not None:
+                he_driving['pitch_in'] = pitch_c_seq[:, frame_idx] 
+            if roll_c_seq is not None:
+                he_driving['roll_in'] = roll_c_seq[:, frame_idx] 
+            
+            kp_driving = keypoint_transformation(kp_canonical, he_driving)
+            kp_norm = kp_driving
+            out = generator(source_image, kp_source=kp_source, kp_driving=kp_norm)
+            predictions.append(out['prediction'])
+            
+        predictions_ts = torch.stack(predictions, dim=1)
+    return predictions_ts
+
+animate_mod.make_animation = _make_animation_cancellable
+make_anim_mod.make_animation = _make_animation_cancellable
 
 def _safe_save_video_with_watermark(video, audio, save_path, watermark=False):
     save_path = Path(save_path)
@@ -163,7 +217,18 @@ def update_job(job_id, status, result_path=None, error=None):
         con.commit()
 
 
+def is_job_cancelled(job_id: str) -> bool:
+    try:
+        with sqlite3.connect(DB_PATH) as con:
+            row = con.execute("select status from jobs where id=?", (job_id,)).fetchone()
+            return bool(row and row[0] == "cancelled")
+    except Exception:
+        return False
+
+
 def process_job(job_id, payload):
+    global CURRENT_JOB_ID
+    CURRENT_JOB_ID = job_id
     t0 = time.time()
     pic_path = payload["image"]
     audio_path = payload["audio"]
@@ -173,83 +238,112 @@ def process_job(job_id, payload):
     temp_dir = result_dir / "tmp"
     temp_dir.mkdir(exist_ok=True)
 
-    # 1. 3DMM Face Extraction with Persistent Caching
-    pic_p = Path(pic_path)
-    cache_dir = pic_p.parent / "sadtalker_cache"
-    coeff_file = cache_dir / "coeff.mat"
-    crop_file = cache_dir / "crop.png"
-    info_file = cache_dir / "crop_info.pkl"
+    try:
+        if is_job_cancelled(job_id):
+            shutil.rmtree(temp_dir, ignore_errors=True)
+            print(f"[SadTalker Worker] Job {job_id} was cancelled before starting.", flush=True)
+            return None
 
-    if coeff_file.exists() and crop_file.exists() and info_file.exists():
-        print(f"[SadTalker Worker] Reusing cached 3D face mesh for {pic_p.name} (0s overhead)", flush=True)
-        first_coeff_path = str(coeff_file)
-        crop_pic_path = str(crop_file)
-        with open(info_file, "rb") as f:
-            crop_info = pickle.load(f)
-    else:
-        cache_dir.mkdir(parents=True, exist_ok=True)
-        print(f"[SadTalker Worker] Extracting 3D face mesh for {pic_p.name} (will be cached)...", flush=True)
-        raw_coeff, raw_crop, crop_info = preprocess_model.generate(
-            pic_path, str(cache_dir), "crop", source_image_flag=True, pic_size=256
-        )
-        if raw_coeff is None:
-            raise RuntimeError("Could not extract face coefficients from image")
+        # 1. 3DMM Face Extraction with Persistent Caching
+        pic_p = Path(pic_path)
+        cache_dir = pic_p.parent / "sadtalker_cache"
+        coeff_file = cache_dir / "coeff.mat"
+        crop_file = cache_dir / "crop.png"
+        info_file = cache_dir / "crop_info.pkl"
 
-        shutil.copyfile(raw_coeff, coeff_file)
-        shutil.copyfile(raw_crop, crop_file)
-        with open(info_file, "wb") as f:
-            pickle.dump(crop_info, f)
+        if coeff_file.exists() and crop_file.exists() and info_file.exists():
+            print(f"[SadTalker Worker] Reusing cached 3D face mesh for {pic_p.name} (0s overhead)", flush=True)
+            first_coeff_path = str(coeff_file)
+            crop_pic_path = str(crop_file)
+            with open(info_file, "rb") as f:
+                crop_info = pickle.load(f)
+        else:
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            print(f"[SadTalker Worker] Extracting 3D face mesh for {pic_p.name} (will be cached)...", flush=True)
+            raw_coeff, raw_crop, crop_info = preprocess_model.generate(
+                pic_path, str(cache_dir), "crop", source_image_flag=True, pic_size=256
+            )
+            if raw_coeff is None:
+                raise RuntimeError("Could not extract face coefficients from image")
 
-        first_coeff_path = str(coeff_file)
-        crop_pic_path = str(crop_file)
-        print(f"[SadTalker Worker] 3D face mesh cached for {pic_p.name}", flush=True)
+            shutil.copyfile(raw_coeff, coeff_file)
+            shutil.copyfile(raw_crop, crop_file)
+            with open(info_file, "wb") as f:
+                pickle.dump(crop_info, f)
 
-    # 2. Audio to Expression (Audio2Coeff)
-    batch = get_data(first_coeff_path, audio_path, device, None, still=True)
-    coeff_path = audio_to_coeff.generate(batch, str(temp_dir), pose_style=0, ref_pose_coeff_path=None)
+            first_coeff_path = str(coeff_file)
+            crop_pic_path = str(crop_file)
+            print(f"[SadTalker Worker] 3D face mesh cached for {pic_p.name}", flush=True)
 
-    # 3. Fast Batch Face Render (batch_size=4, still mode)
-    torch.cuda.empty_cache()
-    data = get_facerender_data(
-        coeff_path,
-        crop_pic_path,
-        first_coeff_path,
-        audio_path,
-        batch_size=4,
-        input_yaw_list=None,
-        input_pitch_list=None,
-        input_roll_list=None,
-        expression_scale=1.15,
-        still_mode=True,
-        preprocess="crop",
-        size=256,
-    )
+        if is_job_cancelled(job_id):
+            shutil.rmtree(temp_dir, ignore_errors=True)
+            print(f"[SadTalker Worker] Job {job_id} cancelled during face extraction.", flush=True)
+            return None
 
-    with torch.no_grad():
-        result = animate_from_coeff.generate(
-            data,
-            str(temp_dir),
-            pic_path,
-            crop_info,
-            enhancer=None,
-            background_enhancer=None,
+        # 2. Audio to Expression (Audio2Coeff)
+        batch = get_data(first_coeff_path, audio_path, device, None, still=True)
+        coeff_path = audio_to_coeff.generate(batch, str(temp_dir), pose_style=0, ref_pose_coeff_path=None)
+
+        if is_job_cancelled(job_id):
+            shutil.rmtree(temp_dir, ignore_errors=True)
+            print(f"[SadTalker Worker] Job {job_id} cancelled during audio-to-coeff.", flush=True)
+            return None
+
+        # 3. Fast Batch Face Render (batch_size=4, still mode)
+        torch.cuda.empty_cache()
+        data = get_facerender_data(
+            coeff_path,
+            crop_pic_path,
+            first_coeff_path,
+            audio_path,
+            batch_size=4,
+            input_yaw_list=None,
+            input_pitch_list=None,
+            input_roll_list=None,
+            expression_scale=1.15,
+            still_mode=True,
             preprocess="crop",
-            img_size=256,
+            size=256,
         )
 
-    del data
-    import gc
-    gc.collect()
-    torch.cuda.empty_cache()
+        with torch.no_grad():
+            result = animate_from_coeff.generate(
+                data,
+                str(temp_dir),
+                pic_path,
+                crop_info,
+                enhancer=None,
+                background_enhancer=None,
+                preprocess="crop",
+                img_size=256,
+            )
 
-    final_mp4 = result_dir / f"{strftime('%Y_%m_%d_%H.%M.%S')}.mp4"
-    shutil.move(result, final_mp4)
-    shutil.rmtree(temp_dir, ignore_errors=True)
+        del data
+        import gc
+        gc.collect()
+        torch.cuda.empty_cache()
 
+        if is_job_cancelled(job_id):
+            shutil.rmtree(temp_dir, ignore_errors=True)
+            print(f"[SadTalker Worker] Job {job_id} cancelled after render.", flush=True)
+            return None
 
-    elapsed = time.time() - t0
-    print(f"[SadTalker Worker] Job {job_id} complete! Video generated in {round(elapsed, 1)} seconds.", flush=True)
-    return final_mp4
+        final_mp4 = result_dir / f"{strftime('%Y_%m_%d_%H.%M.%S')}.mp4"
+        shutil.move(result, final_mp4)
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+        elapsed = time.time() - t0
+        print(f"[SadTalker Worker] Job {job_id} complete! Video generated in {round(elapsed, 1)} seconds.", flush=True)
+        return final_mp4
+    except JobCancelledException:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        import gc
+        gc.collect()
+        torch.cuda.empty_cache()
+        print(f"[SadTalker Worker] Render aborted immediately for cancelled job {job_id}. Freed GPU memory.", flush=True)
+        return None
+    finally:
+        CURRENT_JOB_ID = None
 
 
 def reset_stuck_jobs():
@@ -270,14 +364,22 @@ def main():
             continue
 
         job_id, payload_str = job
+        if is_job_cancelled(job_id):
+            print(f"[SadTalker Worker] Skipping cancelled job: {job_id}", flush=True)
+            continue
+
         print(f"[SadTalker Worker] Processing job: {job_id}", flush=True)
         try:
             payload = json.loads(payload_str)
             video_path = process_job(job_id, payload)
-            update_job(job_id, "completed", str(video_path))
+            if video_path is not None:
+                update_job(job_id, "completed", str(video_path))
         except Exception as exc:
-            traceback.print_exc()
-            update_job(job_id, "failed", error=str(exc))
+            if is_job_cancelled(job_id):
+                print(f"[SadTalker Worker] Job {job_id} was cancelled by user.", flush=True)
+            else:
+                traceback.print_exc()
+                update_job(job_id, "failed", error=str(exc))
 
 
 if __name__ == "__main__":

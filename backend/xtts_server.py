@@ -1,11 +1,14 @@
 import json
 import os
+import re
+import subprocess
 import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 
 # Configure FFmpeg DLL directory if provided
 ffmpeg_bin = os.environ.get("PERSONATWIN_FFMPEG_BIN", "") or r"C:\Users\HP\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-9.0.1-full_build\bin"
+ffmpeg_exe = os.environ.get("FFMPEG_BIN", "ffmpeg")
 if ffmpeg_bin:
     p = Path(ffmpeg_bin)
     f_dir = str(p.parent if p.is_file() else p)
@@ -34,7 +37,6 @@ torchaudio.load = _sf_load
 print("[XTTS Server] Initializing PyTorch and loading XTTS v2 model into memory...")
 from TTS.api import TTS
 
-
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"[XTTS Server] Using device: {device}")
 
@@ -50,6 +52,27 @@ else:
     tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(device)
 
 print("[XTTS Server] XTTS v2 is loaded in memory and warm!")
+
+
+def clean_text_for_speech(text: str) -> str:
+    """Preprocess text for natural, seamless conversational speech synthesis."""
+    if not text:
+        return ""
+    # Remove markdown formatting characters
+    cleaned = re.sub(r'[*_~`#>]', '', text)
+    # Remove stage directions like (laughs), [giggles], *smiles*
+    cleaned = re.sub(r'[\(\[\{][^\)\]\}]*[\)\]\}]', '', cleaned)
+    # Remove emoji and non-speech symbols
+    cleaned = re.sub(r'[\U00010000-\U0010ffff]', '', cleaned)
+    # Convert multiple periods/ellipsis into a single punctuation
+    cleaned = re.sub(r'\.{2,}', '. ', cleaned)
+    # Normalize multiple punctuation marks
+    cleaned = re.sub(r'!+', '!', cleaned)
+    cleaned = re.sub(r'\?+', '?', cleaned)
+    cleaned = re.sub(r'-{2,}', ', ', cleaned)
+    # Clean whitespace
+    cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+    return cleaned
 
 
 class XTTSHandler(BaseHTTPRequestHandler):
@@ -68,20 +91,36 @@ class XTTSHandler(BaseHTTPRequestHandler):
             try:
                 length = int(self.headers.get("Content-Length", 0))
                 payload = json.loads(self.rfile.read(length).decode("utf-8"))
-                text = payload["text"]
+                raw_text = payload["text"]
                 speaker_wav = payload["speaker_wav"]
                 language = payload.get("language", "en")
                 out_path = payload["out_path"]
 
-                print(f"[XTTS Server] Generating audio for text ({len(text)} chars)...")
+                text = clean_text_for_speech(raw_text)
+                if not text:
+                    text = "Hello!"
+
+                speed = float(payload.get("speed", os.getenv("TTS_SPEED", "1.08")))
+                temperature = float(payload.get("temperature", os.getenv("TTS_TEMPERATURE", "0.35")))
+                top_p = float(payload.get("top_p", os.getenv("TTS_TOP_P", "0.85")))
+                repetition_penalty = float(payload.get("repetition_penalty", os.getenv("TTS_REPETITION_PENALTY", "2.0")))
+
+                print(f"[XTTS Server] Synthesizing authentic voice audio ({len(text)} chars, temp={temperature}, speed={speed}, top_p={top_p})...")
                 tts.tts_to_file(
                     text=text,
                     speaker_wav=speaker_wav,
                     language=language,
                     file_path=out_path,
                     split_sentences=True,
+                    speed=speed,
+                    temperature=temperature,
+                    top_p=top_p,
+                    repetition_penalty=repetition_penalty,
+                    length_penalty=1.0,
+                    enable_text_splitting=False,
                 )
-                print(f"[XTTS Server] Audio written to {out_path}")
+
+                print(f"[XTTS Server] Full audio written to {out_path} ({os.path.getsize(out_path)} bytes)")
 
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")

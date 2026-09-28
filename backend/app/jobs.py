@@ -47,6 +47,34 @@ def update_job(job_id, status, result_path=None, error=None):
         )
         con.commit()
 
+def cancel_job(job_id: str):
+    with sqlite3.connect(DB) as con:
+        con.execute(
+            "update jobs set status='cancelled', error='Cancelled by user' where id=?",
+            (job_id,),
+        )
+        con.commit()
+
+
+def delete_jobs_for_persona(persona_id: str, image_path: str = None):
+    with sqlite3.connect(DB) as con:
+        rows = con.execute("select id, payload, result_path from jobs").fetchall()
+        for row in rows:
+            jid, payload, result_path = row
+            match = False
+            if payload:
+                if persona_id in payload or (image_path and image_path in payload):
+                    match = True
+            if match:
+                if result_path and Path(result_path).exists():
+                    try:
+                        Path(result_path).unlink(missing_ok=True)
+                    except Exception:
+                        pass
+                con.execute("delete from jobs where id=?", (jid,))
+        con.commit()
+
+
 def get_job(job_id):
     with sqlite3.connect(DB) as con:
         row = con.execute(
@@ -61,3 +89,4 @@ def get_job(job_id):
         "result_path": row[2],
         "error": row[3],
     }
+
