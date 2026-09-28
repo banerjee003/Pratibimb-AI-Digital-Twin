@@ -1,0 +1,24 @@
+.loadingScreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #000; /* Pure black background for the video */
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.5s ease-out;
+  opacity: 1;
+}
+
+.fadeOut {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.video {
+  transform: scale(0.4);
+  max-width: 100%; /* ensures it doesn't break boundaries on very small screens */
+}

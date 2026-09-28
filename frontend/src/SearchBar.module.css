@@ -1,0 +1,192 @@
+/* SearchBar.module.css */
+
+.wrapper {
+  width: 100%;
+  max-width: 680px;
+}
+
+/* The card that BorderBeam wraps */
+.bar {
+  background: #222;
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-radius: 20px;
+  padding: 18px 20px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Top row ─────────────────────────────── */
+.top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding-bottom: 20px;
+}
+
+.searchIcon {
+  color: #168BFF;
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+/* Pulsing red dot that replaces the search icon while recording */
+.recordingDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ff4444;
+  flex-shrink: 0;
+  margin-top: 7px;
+  box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.5);
+  animation: recordPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes recordPulse {
+  0%   { box-shadow: 0 0 0  0px rgba(255, 68, 68, 0.5); }
+  50%  { box-shadow: 0 0 0 8px rgba(255, 68, 68, 0);    }
+  100% { box-shadow: 0 0 0  0px rgba(255, 68, 68, 0);   }
+}
+
+.input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  color: #F4F7FF;
+  font-size: 1rem;
+  line-height: 1.5;
+  font-family: inherit;
+  height: 24px;
+  max-height: 150px;
+}
+
+.input::placeholder { color: #66708A; }
+.input::-webkit-scrollbar  { display: none; }
+.input::-webkit-resizer    { display: none; }
+
+/* Attachment chips ─────────────────────── */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-bottom: 12px;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #0A1024;
+  border: 1px solid #1B2745;
+  color: #A8B3CC;
+  font-size: 12px;
+  padding: 4px 8px 4px 8px;
+  border-radius: 7px;
+  animation: chipIn 0.2s ease;
+}
+
+@keyframes chipIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.chipName { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.chipRemove {
+  background: none;
+  border: none;
+  color: #66708A;
+  cursor: pointer;
+  display: flex;
+  padding: 1px;
+  border-radius: 3px;
+  transition: color 0.15s, background 0.15s;
+}
+.chipRemove:hover { color: #F4F7FF; background: rgba(255,255,255,0.1); }
+
+/* Bottom row ─────────────────────────── */
+.bottom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.spacer { flex: 1; }
+
+/* Pill attach button */
+.pillBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: #0A1024;
+  border: 1px solid #1B2745;
+  color: #A8B3CC;
+  font-size: 0.82rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+.pillBtn:hover { border-color: #168BFF; color: #F4F7FF; }
+.pillBtn:active { transform: scale(0.97); transition: transform 100ms ease-out; }
+
+/* Icon buttons (mic etc.) */
+.iconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: #A8B3CC;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+.iconBtn:hover { background: rgba(255,255,255,0.07); color: #F4F7FF; }
+.iconBtn:active { transform: scale(0.94); transition: transform 100ms ease-out; }
+.iconBtn.recording {
+  color: #ff4444;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1;    }
+  50%       { opacity: 0.55; }
+}
+
+/* Send button */
+.sendBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #1B2745;
+  border: none;
+  color: #66708A;
+  cursor: not-allowed;
+  transition: background 0.25s, color 0.25s, box-shadow 0.25s, transform 0.15s;
+}
+.sendBtn.sendReady {
+  background: linear-gradient(135deg, #00E5FF, #168BFF);
+  color: #050814;
+  cursor: pointer;
+  box-shadow: 0 0 16px rgba(0,229,255,0.35);
+}
+.sendBtn.sendReady:hover {
+  box-shadow: 0 0 24px rgba(0,229,255,0.55);
+  transform: translateY(-1px);
+}
+.sendBtn.sendReady:active {
+  transform: scale(0.94) translateY(0);
+  transition: transform 100ms ease-out;
+}

@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --primary-bg:       #050814;
+  --secondary-bg:     #0A1024;
+  --card-surface:     #101936;
+  --primary-accent:   #00E5FF;
+  --secondary-accent: #168BFF;
+  --purple-accent:    #7C3DFF;
+  --glow-purple:      #A855F7;
+  --primary-text:     #F4F7FF;
+  --secondary-text:   #A8B3CC;
+  --muted-text:       #66708A;
+  --border-color:     #1B2745;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #111;
+  color: #F4F7FF;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}

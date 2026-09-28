@@ -1,0 +1,775 @@
+/* CreatePersonaModal.module.css */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px;
+  background: rgba(8, 11, 20, 0.6);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  animation: overlayFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes overlayFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px) saturate(100%);
+    -webkit-backdrop-filter: blur(0px) saturate(100%);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
+}
+
+.cardWrapper {
+  width: 100%;
+  max-width: 600px;
+  position: relative;
+  box-shadow: 0 32px 64px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  animation: modalPopIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+  max-height: 90vh;
+  display: flex;
+}
+
+@keyframes modalPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.75) translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(0.8) translateY(0);
+  }
+}
+
+.modalCard {
+  background: #dddddd;
+  border: 1px solid #c9cdd6;
+  border-radius: 18px;
+  padding: 24px 26px 22px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow-y: auto;
+  max-height: 90vh;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.modalCard::-webkit-scrollbar {
+  width: 6px;
+}
+.modalCard::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+/* Close Button */
+.closeBtn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.07);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(6px);
+  padding: 0;
+}
+
+.closeBtn:hover {
+  background: rgba(0, 0, 0, 0.15);
+  color: #0F172A;
+  border-color: rgba(0, 0, 0, 0.25);
+  transform: rotate(90deg) scale(1.06);
+}
+
+.closeBtn:active {
+  transform: rotate(90deg) scale(0.94);
+  transition: transform 100ms ease-out;
+}
+
+/* Header */
+.header {
+  margin-bottom: 18px;
+  padding-right: 32px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.sparkleIconBox {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sparkleIcon {
+  color: #0A84FF;
+}
+
+.title {
+  font-size: 1.28rem;
+  font-weight: 600;
+  color: #0F172A;
+  letter-spacing: -0.02em;
+  margin: 0 0 3px 0;
+}
+
+.subtitle {
+  font-size: 0.8rem;
+  color: #475569;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Form layout */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.errorBanner {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #FCA5A5;
+  font-size: 0.78rem;
+  padding: 7px 12px;
+  border-radius: 8px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #334155;
+  letter-spacing: 0.01em;
+}
+
+.required {
+  color: #EF4444;
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  background: #f1f3f7;
+  border: 1px solid #c0c6d2;
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #0F172A;
+  font-size: 0.84rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  background: #ffffff;
+  border-color: #0A84FF;
+  box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.25);
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: #94A3B8;
+}
+
+.selectWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 32px;
+  cursor: pointer;
+}
+
+.select option {
+  background: #ffffff;
+  color: #0F172A;
+}
+
+.selectArrow {
+  position: absolute;
+  right: 11px;
+  color: #64748B;
+  pointer-events: none;
+}
+
+.helperText {
+  font-size: 0.71rem;
+  color: #64748B;
+  line-height: 1.35;
+  margin-top: 2px;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 64px;
+  line-height: 1.45;
+}
+
+/* Dropzone Section */
+.dropzoneSection {
+  display: flex;
+  flex-direction: column;
+  margin-top: 8px;
+}
+
+.dropzoneTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0 0 4px 0;
+}
+
+.dropzoneSubtitle {
+  font-size: 0.84rem;
+  color: #475569;
+  margin: 0 0 16px 0;
+}
+
+.dropzoneLabel {
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: #334155;
+  margin-bottom: 8px;
+}
+
+.dropzoneBox {
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
+  background: #E5F0FF; /* Light blue tint */
+  padding: 32px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.dropzoneBox::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 140px;
+  height: 140px;
+  background: repeating-conic-gradient(from 0deg, transparent 0deg 20deg, rgba(255, 255, 255, 0.4) 20deg 40deg);
+  border-radius: 50%;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.dropzoneBox:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(10, 132, 255, 0.12); /* Tinted shadow */
+}
+
+.dropzoneBox:active {
+  transform: scale(0.97) translateY(0);
+}
+
+.dropzoneContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  z-index: 1;
+}
+
+.dropzoneIcon {
+  color: #0A84FF; /* Tint color */
+  margin-bottom: 2px;
+}
+
+.dropzonePrimaryText {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #0F172A;
+}
+
+.dropzoneSecondaryText {
+  font-size: 0.75rem;
+  color: #94A3B8;
+}
+
+.dropzonePreviewContainer {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.dropzonePreviewImg {
+  max-width: 100%;
+  max-height: 140px;
+  border-radius: 6px;
+  object-fit: contain;
+}
+
+.dropzoneRemoveBtn {
+  position: absolute;
+  top: -8px;
+  right: calc(50% - 80px);
+  background: #ffffff;
+  border: 1px solid #c9cdd6;
+  color: #b91c1c;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.dropzoneRemoveBtn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.dropzoneRemoveBtn:active {
+  transform: scale(0.94);
+}
+
+/* Voice Dual Cards */
+.audioCardsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.audioCardYellow,
+.audioCardPurple {
+  position: relative;
+  border-radius: 20px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 110px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+.audioCardYellow:hover,
+.audioCardPurple:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.audioCardYellow:active,
+.audioCardPurple:active {
+  transform: scale(0.97) translateY(0);
+}
+
+.audioCardYellow {
+  background: #FFF1CD; /* Light yellow */
+}
+.audioCardYellow::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  left: -40px;
+  width: 150px;
+  height: 150px;
+  background: repeating-conic-gradient(from 0deg, transparent 0deg 15deg, rgba(255, 255, 255, 0.4) 15deg 30deg);
+  border-radius: 50%;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.audioCardPurple {
+  background: #E0DAFC; /* Light purple */
+}
+.audioCardPurple::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 140px;
+  height: 140px;
+  background: repeating-conic-gradient(from 0deg, transparent 0deg 20deg, rgba(255, 255, 255, 0.3) 20deg 40deg);
+  border-radius: 50%;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.audioBadge {
+  position: absolute;
+  top: -6px;
+  right: 12px;
+  background: #FF6B6B;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 99px;
+  transform: translateY(6px);
+  z-index: 2;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.audioCardIconWrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.audioCardIcon {
+  color: #0F172A;
+}
+
+.audioCardBottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 1;
+}
+
+.audioCardText {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.audioCardArrow {
+  color: #4C3CDE;
+}
+.audioCardYellow .audioCardArrow {
+  color: #0F172A;
+}
+
+/* Recording Interface */
+.recordingInterface {
+  grid-column: 1 / -1;
+  background: #ffffff;
+  border: 1px solid #c9cdd6;
+  border-radius: 20px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  height: 120px;
+  overflow: hidden;
+  animation: modalPopIn 0.25s ease-out;
+}
+
+.recordingHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 2;
+  flex-shrink: 0;
+}
+
+.recordingTimeActive {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #0F172A;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Pulsing red REC dot */
+.recordingTimeActive::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #EF4444;
+  display: inline-block;
+  animation: recDotPulse 1.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes recDotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.7); }
+}
+
+.recordingTimeMax {
+  font-size: 0.78rem;
+  color: #94A3B8;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Waveform visualizer */
+.waveformContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5px;
+  flex: 1;
+  padding: 0 48px 0 4px; /* right padding leaves space for stop btn */
+}
+
+.waveformBar {
+  width: 3px;
+  border-radius: 8px;
+  background: #0A84FF;
+  transform-origin: center;
+  animation: liveBar ease-in-out infinite alternate;
+  min-height: 3px;
+  /* Base height set via animation */
+}
+
+@keyframes liveBar {
+  0% {
+    height: 3px;
+    opacity: 0.5;
+  }
+  25% {
+    height: 20px;
+    opacity: 0.8;
+  }
+  50% {
+    height: 44px;
+    opacity: 1;
+  }
+  75% {
+    height: 18px;
+    opacity: 0.75;
+  }
+  100% {
+    height: 6px;
+    opacity: 0.55;
+  }
+}
+
+/* Stop Button */
+.stopRecordingBtn {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  background: #FEE2E2;
+  border: 1.5px solid #FCA5A5;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  transition: background 0.15s, transform 0.1s;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+.stopRecordingBtn:hover {
+  background: #FECACA;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+}
+
+.stopRecordingBtn:active {
+  transform: translateY(-50%) scale(0.88);
+}
+
+.stopIconSquare {
+  width: 12px;
+  height: 12px;
+  background: #EF4444;
+  border-radius: 2px;
+}
+
+/* Uploaded file indicator */
+.uploadedVoiceFile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8fafc;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #c9cdd6;
+  margin-top: -6px; /* slightly pull up toward the grid */
+}
+
+.voiceActiveIcon {
+  color: #0A84FF;
+}
+
+.fileNameBadge {
+  flex: 1;
+  font-size: 0.82rem;
+  color: #0F172A;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.removeFileBtn {
+  background: #ffffff;
+  border: 1px solid #c9cdd6;
+  color: #b91c1c;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.removeFileBtn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.removeFileBtn:active {
+  transform: scale(0.94);
+}
+
+/* Submit CTA */
+.submitBtn {
+  width: 100%;
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: none;
+  background: #0A84FF;
+  color: #FFFFFF;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+  transition: background 0.2s, transform 0.15s, opacity 0.2s;
+}
+
+.submitBtn:hover {
+  background: #007AFF;
+}
+
+.submitBtn:active {
+  transform: scale(0.97) translateY(0);
+  transition: transform 100ms ease-out;
+}
+
+.submitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #FFFFFF;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Success box */
+.successBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 12px;
+  animation: fadeIn 0.3s ease;
+}
+
+.successIcon {
+  color: #10B981;
+  margin-bottom: 12px;
+}
+
+.successBox h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.02em;
+}
+
+.successBox p {
+  font-size: 0.88rem;
+  color: #475569;
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+  max-width: 440px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 540px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+  .modalCard {
+    padding: 20px 16px 18px;
+  }
+}
