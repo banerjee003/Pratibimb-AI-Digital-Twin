@@ -54,9 +54,17 @@
 }
 
 @keyframes recordPulse {
-  0%   { box-shadow: 0 0 0  0px rgba(255, 68, 68, 0.5); }
-  50%  { box-shadow: 0 0 0 8px rgba(255, 68, 68, 0);    }
-  100% { box-shadow: 0 0 0  0px rgba(255, 68, 68, 0);   }
+  0% {
+    box-shadow: 0 0 0 0px rgba(255, 68, 68, 0.5);
+  }
+
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 68, 68, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0px rgba(255, 68, 68, 0);
+  }
 }
 
 .input {
@@ -74,9 +82,17 @@
   max-height: 150px;
 }
 
-.input::placeholder { color: #66708A; }
-.input::-webkit-scrollbar  { display: none; }
-.input::-webkit-resizer    { display: none; }
+.input::placeholder {
+  color: #66708A;
+}
+
+.input::-webkit-scrollbar {
+  display: none;
+}
+
+.input::-webkit-resizer {
+  display: none;
+}
 
 /* Attachment chips ─────────────────────── */
 .chips {
@@ -100,11 +116,23 @@
 }
 
 @keyframes chipIn {
-  from { opacity: 0; transform: scale(0.92); }
-  to   { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-.chipName { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chipName {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .chipRemove {
   background: none;
@@ -116,7 +144,11 @@
   border-radius: 3px;
   transition: color 0.15s, background 0.15s;
 }
-.chipRemove:hover { color: #F4F7FF; background: rgba(255,255,255,0.1); }
+
+.chipRemove:hover {
+  color: #F4F7FF;
+  background: rgba(255, 255, 255, 0.1);
+}
 
 /* Bottom row ─────────────────────────── */
 .bottom {
@@ -125,7 +157,9 @@
   gap: 6px;
 }
 
-.spacer { flex: 1; }
+.spacer {
+  flex: 1;
+}
 
 /* Pill attach button */
 .pillBtn {
@@ -143,8 +177,16 @@
   cursor: pointer;
   transition: border-color 0.2s, color 0.2s;
 }
-.pillBtn:hover { border-color: #168BFF; color: #F4F7FF; }
-.pillBtn:active { transform: scale(0.97); transition: transform 100ms ease-out; }
+
+.pillBtn:hover {
+  border-color: #168BFF;
+  color: #F4F7FF;
+}
+
+.pillBtn:active {
+  transform: scale(0.97);
+  transition: transform 100ms ease-out;
+}
 
 /* Icon buttons (mic etc.) */
 .iconBtn {
@@ -160,16 +202,32 @@
   cursor: pointer;
   transition: background 0.18s, color 0.18s;
 }
-.iconBtn:hover { background: rgba(255,255,255,0.07); color: #F4F7FF; }
-.iconBtn:active { transform: scale(0.94); transition: transform 100ms ease-out; }
+
+.iconBtn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #F4F7FF;
+}
+
+.iconBtn:active {
+  transform: scale(0.94);
+  transition: transform 100ms ease-out;
+}
+
 .iconBtn.recording {
   color: #ff4444;
   animation: pulse 1.2s ease-in-out infinite;
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1;    }
-  50%       { opacity: 0.55; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.55;
+  }
 }
 
 /* Send button */
@@ -186,16 +244,19 @@
   cursor: not-allowed;
   transition: background 0.25s, color 0.25s, box-shadow 0.25s, transform 0.15s;
 }
+
 .sendBtn.sendReady {
   background: linear-gradient(135deg, #00E5FF, #168BFF);
   color: #050814;
   cursor: pointer;
-  box-shadow: 0 0 16px rgba(0,229,255,0.35);
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.35);
 }
+
 .sendBtn.sendReady:hover {
-  box-shadow: 0 0 24px rgba(0,229,255,0.55);
+  box-shadow: 0 0 24px rgba(0, 229, 255, 0.55);
   transform: translateY(-1px);
 }
+
 .sendBtn.sendReady:active {
   transform: scale(0.94) translateY(0);
   transition: transform 100ms ease-out;
@@ -280,6 +341,7 @@
     opacity: 0;
     transform: translateY(6px) scale(0.96);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);

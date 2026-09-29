@@ -9,6 +9,7 @@ import LoadingScreen from './LoadingScreen';
 import ChatPage from './ChatPage';
 import { supabase } from './lib/supabase';
 import { API } from './lib/config';
+import fullLogo4 from './assets/full logo4.png';
 import styles from './App.module.css';
 
 /* ── Particle canvas background ─────────────────────────────── */
@@ -217,7 +218,7 @@ export default function App() {
       if (res.ok) {
         const data = await res.json();
         const list = Array.isArray(data) ? data : [];
-        list.sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
+        list.sort((a, b) => new Date(b.last_used_at || b.created_at || 0) - new Date(a.last_used_at || a.created_at || 0));
         setPersonas(list);
         restoreActiveChat(list);
       }
@@ -304,12 +305,27 @@ export default function App() {
     }
   };
 
-  const handleEditPersona = (personaToEdit) => {
+  const handleEditPersona = async (personaToEdit) => {
     if (!session) {
       openAuth('signin');
       return;
     }
     setEditingPersona(personaToEdit);
+
+    // Fetch the latest fresh state from the backend
+    if (session?.access_token && personaToEdit?.id && !String(personaToEdit.id).startsWith('demo-')) {
+      try {
+        const res = await fetch(`${API}/api/personas/${personaToEdit.id}`, {
+          headers: { Authorization: `Bearer ${session.access_token}` }
+        });
+        if (res.ok) {
+          const fresh = await res.json();
+          setEditingPersona(fresh);
+        }
+      } catch (err) {
+        console.warn('Could not refresh editing persona:', err);
+      }
+    }
   };
 
   const handlePersonaSaved = (personaData) => {
@@ -377,7 +393,7 @@ export default function App() {
             }}
           >
             <img
-              src="/logo.png?v=4"
+              src={fullLogo4}
               alt="Pratibimb"
               className={styles.logoImg}
               onError={(e) => {
@@ -549,6 +565,15 @@ export default function App() {
           </div>
         </section>
 
+        {/* ── Chat Page Override ── */}
+        {activeChat && (
+          <ChatPage
+            persona={activeChat}
+            onClose={handleCloseChat}
+            onEditPersona={handleEditPersona}
+          />
+        )}
+
         {/* ── Auth Modal Popup with Backdrop Blur Overlay ── */}
         {authModal && (
           <AuthPage
@@ -580,15 +605,6 @@ export default function App() {
           onClose={() => setDeletingPersona(null)}
           onDeleted={handlePersonaDeleted}
         />
-
-        {/* ── Chat Page Override ── */}
-        {activeChat && (
-          <ChatPage
-            persona={activeChat}
-            onClose={handleCloseChat}
-            onEditPersona={handleEditPersona}
-          />
-        )}
       </div>
     </>
   );

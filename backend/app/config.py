@@ -14,7 +14,7 @@ SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 
 XTTS_PYTHON = os.getenv("XTTS_PYTHON", r"D:\Anaconda\envs\xtts\python.exe")
 SADTALKER_PYTHON = os.getenv("SADTALKER_PYTHON", r"D:\Anaconda\envs\sadtalker\python.exe")

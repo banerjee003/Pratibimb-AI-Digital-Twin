@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { MessageSquare, Mic, Video, LogOut, X, Play, Pause, Volume2, FileText, PenLine, Square } from 'lucide-react';
-import { ThinkingOrb } from 'thinking-orbs';
+import { ThinkingOrb, CompactThinkingPill, VideoThinkingCard } from './ThinkingOrbs';
 import { VoiceBeam } from 'voice-glow';
 import SearchBar from './SearchBar';
 import { supabase } from './lib/supabase';
@@ -46,31 +46,66 @@ export default function ChatPage({ persona, onClose, onEditPersona }) {
   const [language, setLanguage] = useState(persona?.language || 'en');
   const [thinking, setThinking] = useState(null);
   const [playingAudio, setPlayingAudio] = useState(null);
+  const [audioProgress, setAudioProgress] = useState(0);
+  const [audioCurrentTime, setAudioCurrentTime] = useState(0);
+  const [audioDuration, setAudioDuration] = useState(0);
   const audioPlayerRef = useRef(null);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
+  const isNearBottomRef = useRef(true);
   const timers = useRef([]);
 
   const clearTimers = () => { timers.current.forEach(clearTimeout); timers.current = []; };
 
-  // Scroll to bottom when messages change
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // Lock body scroll while chat page is open to prevent underlying page scrollbars and jitter
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, []);
+
+  // Monitor user scroll position: if scrolled up > 100px from bottom, do NOT force scroll down
+  const handleMessagesScroll = () => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - (el.scrollTop + el.clientHeight);
+    isNearBottomRef.current = distanceFromBottom < 100;
+  };
+
+  // Safe scroll to bottom: avoids redundant animations or scroll jumps while user is reading history
+  const scrollToBottom = (instant = false, force = false) => {
+    const el = messagesContainerRef.current;
+    if (!el) {
+      if (force || isNearBottomRef.current) {
+        messagesEndRef.current?.scrollIntoView({ behavior: instant ? 'auto' : 'smooth' });
+      }
+      return;
+    }
+
+    // If user has scrolled up to read past messages, do not yank them down
+    if (!force && !isNearBottomRef.current) {
+      return;
+    }
+
+    const targetTop = el.scrollHeight;
+    const currentDistance = targetTop - (el.scrollTop + el.clientHeight);
+
+    // If already at the bottom (within 4px), avoid triggering an unnecessary animation
+    if (currentDistance <= 4) {
+      return;
+    }
+
+    el.scrollTo({
+      top: targetTop,
+      behavior: instant ? 'auto' : 'smooth',
+    });
   };
 
   useEffect(() => {
-    scrollToBottom();
+    scrollToBottom(false, false);
   }, [messages, thinking]);
-
-  // Screen scrolling: forward wheel events anywhere in mainArea to messagesContainer
-  const handleMainWheel = (e) => {
-    if (messagesContainerRef.current && !messagesContainerRef.current.contains(e.target)) {
-      messagesContainerRef.current.scrollBy({
-        top: e.deltaY,
-        behavior: 'auto',
-      });
-    }
-  };
 
   // Load chat history from backend if real persona
   useEffect(() => {
@@ -131,6 +166,23 @@ export default function ChatPage({ persona, onClose, onEditPersona }) {
   const cancelledJobsRef = useRef(new Set());
   const playedVideosRef = useRef(new Set());
 
+  const handleAudioTimeUpdate = () => {
+    if (!audioPlayerRef.current) return;
+    const cur = audioPlayerRef.current.currentTime || 0;
+    const dur = audioPlayerRef.current.duration || 0;
+    setAudioCurrentTime(cur);
+    if (dur > 0 && isFinite(dur)) {
+      setAudioDuration(dur);
+      setAudioProgress(cur / dur);
+    }
+  };
+
+  const handleAudioEnded = () => {
+    setPlayingAudio(null);
+    setAudioProgress(0);
+    setAudioCurrentTime(0);
+  };
+
   // Audio Playback Controller
   const playAudioUrl = useCallback((url) => {
     if (!url) return;
@@ -138,14 +190,37 @@ export default function ChatPage({ persona, onClose, onEditPersona }) {
       if (playingAudio === url) {
         audioPlayerRef.current.pause();
         setPlayingAudio(null);
+        setAudioProgress(0);
+        setAudioCurrentTime(0);
       } else {
         audioPlayerRef.current.src = url;
         audioPlayerRef.current.play()
-          .then(() => setPlayingAudio(url))
+          .then(() => {
+            setPlayingAudio(url);
+            setAudioProgress(0);
+            setAudioCurrentTime(0);
+          })
           .catch(e => console.log('Audio autoplay prevented:', e));
       }
     }
   }, [playingAudio]);
+
+  const handleSeekAudio = useCallback((url, pct) => {
+    if (audioPlayerRef.current) {
+      if (playingAudio !== url) {
+        audioPlayerRef.current.src = url;
+        setPlayingAudio(url);
+      }
+      const dur = audioPlayerRef.current.duration || audioDuration || 0;
+      if (dur > 0 && isFinite(dur)) {
+        const seekTo = dur * pct;
+        audioPlayerRef.current.currentTime = seekTo;
+        setAudioProgress(pct);
+        setAudioCurrentTime(seekTo);
+      }
+      audioPlayerRef.current.play().catch(() => {});
+    }
+  }, [playingAudio, audioDuration]);
 
   // Video Cancellation Handler (Non-destructive: keeps voice and text intact)
   const handleCancelVideo = useCallback(async (msgId, jobId) => {
@@ -305,14 +380,14 @@ export default function ChatPage({ persona, onClose, onEditPersona }) {
       const personaMsgId = uid();
       const isVideoRequest = responseMode === 'video' && Boolean(chatData.audio_url);
 
-      // 2. Immediately emit persona message so Text and Voice tabs display it instantly!
+      const initialDur = chatData.duration ? formatAudioDuration(chatData.duration) : null;
       const personaMsg = {
         id: personaMsgId,
         role: 'persona',
         text: reply,
         transcription: reply,
         audioUrl: audioUrl,
-        dur: '0:18',
+        dur: initialDur,
         isVideoGenerating: isVideoRequest,
         videoJobId: null,
         videoStageIdx: 3,
@@ -487,8 +562,13 @@ export default function ChatPage({ persona, onClose, onEditPersona }) {
       {/* Hidden audio element for speech playback */}
       <audio
         ref={audioPlayerRef}
-        onEnded={() => setPlayingAudio(null)}
-        onPause={() => setPlayingAudio(null)}
+        onTimeUpdate={handleAudioTimeUpdate}
+        onEnded={handleAudioEnded}
+        onPause={() => {
+          if (audioPlayerRef.current?.paused && !audioPlayerRef.current?.ended) {
+            setPlayingAudio(null);
+          }
+        }}
       />
 
       {/* ── Sidebar ── */}
@@ -506,8 +586,8 @@ export default function ChatPage({ persona, onClose, onEditPersona }) {
         </div>
       </aside>
 
-      {/* ── Main with Wheel Event Forwarding ── */}
-      <main className={styles.mainArea} onWheel={handleMainWheel}>
+      {/* ── Main Area ── */}
+      <main className={styles.mainArea}>
         <header className={styles.header}>
           <div className={styles.userInfo}>
             <div className={styles.avatarPlaceholder}>
@@ -561,7 +641,11 @@ export default function ChatPage({ persona, onClose, onEditPersona }) {
         </header>
 
         <div className={styles.contentArea}>
-          <div ref={messagesContainerRef} className={`${styles.messagesContainer} ${thinking ? styles.thinkingGlow : ''}`}>
+          <div
+            ref={messagesContainerRef}
+            onScroll={handleMessagesScroll}
+            className={`${styles.messagesContainer} ${thinking ? styles.thinkingGlow : ''}`}
+          >
             {messages.map((msg) => {
               const isUser = msg.role === 'user';
 
@@ -609,8 +693,19 @@ export default function ChatPage({ persona, onClose, onEditPersona }) {
                           >
                             {isPlayingThis ? <Pause size={15} fill="currentColor" /> : <Play size={15} fill="currentColor" />}
                           </button>
-                          <Waveform isPlaying={isPlayingThis} />
-                          <span className={styles.duration}>{msg.dur || 'Voice'}</span>
+                          <Waveform
+                            isPlaying={isPlayingThis}
+                            progress={isPlayingThis ? audioProgress : 0}
+                            onSeek={(pct) => handleSeekAudio(msg.audioUrl, pct)}
+                          />
+                          <span className={styles.duration}>
+                            <AudioDurationBadge
+                              audioUrl={msg.audioUrl}
+                              fallbackDur={msg.dur}
+                              isPlaying={isPlayingThis}
+                              currentTime={audioCurrentTime}
+                            />
+                          </span>
                         </div>
                         {(msg.text || msg.transcription) && (
                           <div className={styles.replyTranscription}>
@@ -647,93 +742,15 @@ export default function ChatPage({ persona, onClose, onEditPersona }) {
                   return (
                     <div key={msg.id} className={`${styles.messageRow} ${styles.rowLeft} ${styles.orbRow}`}>
                       <PersonaAvatar avatarImg={personaAvatarImg} size="lg" />
-                      <div className={styles.conicCardWrapper}>
-                        <div className={styles.conicCardInner}>
-                          <div className={styles.stageHeader}>
-                            <div className={styles.stepPill}>
-                              <span className={styles.stepPillDot} />
-                              <span>Step {stageIdx + 1} of 7</span>
-                            </div>
-                            <span className={styles.stageTitle}>
-                              {msg.videoTitle || phaseData.title}
-                            </span>
-                          </div>
-
-                          <div className={styles.orbCanvasContainer}>
-                            <ThinkingOrb
-                              state={phaseData.orb || 'composing'}
-                              size={64}
-                              speed={1.25}
-                            />
-                          </div>
-
-                          <p className={styles.stageDesc}>
-                            {msg.videoDesc || phaseData.desc}
-                          </p>
-
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', margin: '4px 0' }}>
-                            {msg.audioUrl && (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 12px', background: 'rgba(255,255,255,0.06)', borderRadius: '999px', fontSize: '11.5px', color: '#a1a1aa' }}>
-                                <button
-                                  type="button"
-                                  onClick={() => playAudioUrl(msg.audioUrl)}
-                                  style={{ background: 'none', border: 'none', color: '#38bdf8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', padding: 0, font: 'inherit', fontWeight: 600 }}
-                                >
-                                  {isPlayingPreview ? <Pause size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />}
-                                  {isPlayingPreview ? 'Pause Voice Preview' : 'Listen to Voice Preview'}
-                                </button>
-                              </div>
-                            )}
-
-                            <button
-                              type="button"
-                              onClick={() => handleCancelVideo(msg.id, msg.videoJobId)}
-                              title="Stop video generation and keep voice/text reply"
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '5px',
-                                padding: '4px 12px',
-                                background: 'rgba(239, 68, 68, 0.15)',
-                                border: '1px solid rgba(239, 68, 68, 0.35)',
-                                borderRadius: '999px',
-                                color: '#f87171',
-                                fontSize: '11.5px',
-                                fontWeight: 600,
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.28)';
-                                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.6)';
-                                e.currentTarget.style.color = '#fff';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
-                                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.35)';
-                                e.currentTarget.style.color = '#f87171';
-                              }}
-                            >
-                              <Square size={11} fill="currentColor" />
-                              Stop Video
-                            </button>
-                          </div>
-
-                          <div className={styles.stageDotsContainer}>
-                            {VIDEO_PHASES.map((st, i) => {
-                              const isDone = i < stageIdx;
-                              const isActive = i === stageIdx;
-                              return (
-                                <div
-                                  key={st.stage}
-                                  className={`${styles.stageDot} ${isDone ? styles.stageDotDone : ''} ${isActive ? styles.stageDotActive : ''}`}
-                                  title={`Step ${i + 1}: ${st.title}`}
-                                />
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
+                      <VideoThinkingCard
+                        stageIdx={stageIdx}
+                        title={msg.videoTitle || phaseData.title}
+                        desc={msg.videoDesc || phaseData.desc}
+                        audioUrl={msg.audioUrl}
+                        isPlayingAudio={isPlayingPreview}
+                        onPlayAudio={(url) => playAudioUrl(url)}
+                        onCancel={() => handleCancelVideo(msg.id, msg.videoJobId)}
+                      />
                     </div>
                   );
                 }
@@ -796,7 +813,9 @@ export default function ChatPage({ persona, onClose, onEditPersona }) {
                           )}
                           <div className={styles.videoTopBar}>
                             <div className={styles.liveDot} />
-                            <span className={styles.liveLabel}>Avatar Audio · {msg.dur || 'Voice'}</span>
+                            <span className={styles.liveLabel}>
+                              <AudioDurationBadge audioUrl={msg.audioUrl} fallbackDur={msg.dur} prefix="Avatar Audio · " />
+                            </span>
                           </div>
                           <div className={styles.videoOverlay}>
                             <button
@@ -842,62 +861,18 @@ export default function ChatPage({ persona, onClose, onEditPersona }) {
                 <PersonaAvatar avatarImg={personaAvatarImg} size={responseMode === 'video' ? 'lg' : 'sm'} />
 
                 {responseMode === 'video' ? (
-                  <div className={styles.conicCardWrapper}>
-                    <div className={styles.conicCardInner}>
-                      <div className={styles.stageHeader}>
-                        <div className={styles.stepPill}>
-                          <span className={styles.stepPillDot} />
-                          <span>Step {(thinking.stageIdx || 0) + 1} of {thinking.total || 7}</span>
-                        </div>
-                        <span className={styles.stageTitle}>
-                          {thinking.title || VIDEO_PHASES[thinking.stageIdx || 0]?.title || 'Processing'}
-                        </span>
-                      </div>
-
-                      <div className={styles.orbCanvasContainer}>
-                        <ThinkingOrb
-                          state={thinking.orb || 'composing'}
-                          size={64}
-                          speed={1.25}
-                        />
-                      </div>
-
-                      <p className={styles.stageDesc}>
-                        {thinking.desc || VIDEO_PHASES[thinking.stageIdx || 0]?.desc || 'Synthesizing avatar...'}
-                      </p>
-
-                      <div className={styles.stageDotsContainer}>
-                        {VIDEO_PHASES.map((st, i) => {
-                          const currentIdx = thinking.stageIdx || 0;
-                          const isDone = i < currentIdx;
-                          const isActive = i === currentIdx;
-                          return (
-                            <div
-                              key={st.stage}
-                              className={`${styles.stageDot} ${isDone ? styles.stageDotDone : ''} ${isActive ? styles.stageDotActive : ''}`}
-                              title={`Step ${i + 1}: ${st.title}`}
-                            />
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
+                  <VideoThinkingCard
+                    stageIdx={thinking.stageIdx || 0}
+                    title={thinking.title || VIDEO_PHASES[thinking.stageIdx || 0]?.title}
+                    desc={thinking.desc || VIDEO_PHASES[thinking.stageIdx || 0]?.desc}
+                    orb={thinking.orb}
+                  />
                 ) : (
-                  <div className={styles.orbCardCompact}>
-                    <ThinkingOrb
-                      state={thinking.orb || 'working'}
-                      size={20}
-                      speed={1.2}
-                    />
-                    <div className={styles.compactTextGroup}>
-                      <span className={styles.compactTitle}>
-                        {thinking.title || thinking.label || 'Generating response...'}
-                      </span>
-                      {thinking.desc && (
-                        <span className={styles.compactDesc}>{thinking.desc}</span>
-                      )}
-                    </div>
-                  </div>
+                  <CompactThinkingPill
+                    orb={thinking.orb || (responseMode === 'audio' ? 'listening' : 'searching')}
+                    label={thinking.title || thinking.label || 'Generating response...'}
+                    desc={thinking.desc}
+                  />
                 )}
               </div>
             )}
@@ -950,20 +925,99 @@ function Timestamp({ time, showTick }) {
   );
 }
 
-function Waveform({ isPlaying }) {
+function Waveform({ isPlaying, progress = 0, onSeek }) {
+  // 36 static bar heights providing a natural speech frequency curve
+  const barHeights = [
+    28, 45, 70, 35, 60, 85, 40, 65, 90, 50,
+    75, 95, 60, 80, 55, 70, 45, 80, 65, 50,
+    75, 90, 60, 40, 70, 85, 55, 35, 65, 50,
+    40, 60, 45, 30, 50, 35
+  ];
+
+  const handleClick = (e) => {
+    if (!onSeek) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const pct = Math.max(0, Math.min(1, clickX / rect.width));
+    onSeek(pct);
+  };
+
   return (
-    <div className={styles.waveform}>
-      {Array.from({ length: 26 }).map((_, i) => (
-        <div
-          key={i}
-          className={styles.waveBar}
-          style={{
-            height: `${8 + Math.abs(Math.sin(i * 0.65)) * 12 + (i % 3) * 3}px`,
-            opacity: isPlaying ? 1 : 0.6,
-            animation: isPlaying ? `wavePulse 0.8s ease-in-out infinite alternate ${i * 0.05}s` : 'none',
-          }}
-        />
-      ))}
+    <div
+      className={styles.waveform}
+      onClick={handleClick}
+      role="progressbar"
+      aria-valuenow={Math.round(progress * 100)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      title="Click to seek"
+    >
+      {barHeights.map((h, i) => {
+        const barPct = (i + 1) / barHeights.length;
+        const isActive = progress >= barPct;
+        return (
+          <div
+            key={i}
+            className={`${styles.waveBar} ${isActive ? styles.waveBarActive : ''} ${isPlaying ? styles.waveBarPlaying : ''}`}
+            style={{
+              height: `${h}%`,
+              animationDelay: isPlaying ? `${(i * 0.045) % 0.6}s` : '0s',
+            }}
+          />
+        );
+      })}
     </div>
   );
+}
+
+function formatAudioDuration(sec) {
+  if (!sec || isNaN(sec) || !isFinite(sec) || sec <= 0) return '0:00';
+  const total = Math.round(sec);
+  const mins = Math.floor(total / 60);
+  const secs = total % 60;
+  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+}
+
+function AudioDurationBadge({ audioUrl, fallbackDur, prefix = '', isPlaying = false, currentTime = 0 }) {
+  const [dur, setDur] = useState(() => {
+    if (fallbackDur && fallbackDur !== '0:18' && fallbackDur !== '0:00') {
+      return fallbackDur;
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    if (fallbackDur && fallbackDur !== '0:18' && fallbackDur !== '0:00') {
+      setDur(fallbackDur);
+    }
+  }, [fallbackDur]);
+
+  useEffect(() => {
+    if (!audioUrl) return;
+    const a = new Audio();
+    a.preload = 'metadata';
+
+    const handleLoaded = () => {
+      if (a.duration && isFinite(a.duration) && a.duration > 0) {
+        setDur(formatAudioDuration(a.duration));
+      }
+    };
+
+    a.addEventListener('loadedmetadata', handleLoaded);
+    a.addEventListener('durationchange', handleLoaded);
+    a.src = audioUrl;
+    a.load();
+
+    return () => {
+      a.removeEventListener('loadedmetadata', handleLoaded);
+      a.removeEventListener('durationchange', handleLoaded);
+    };
+  }, [audioUrl]);
+
+  let display = dur || (fallbackDur && fallbackDur !== '0:18' ? fallbackDur : 'Voice');
+  if (isPlaying && dur) {
+    display = `${formatAudioDuration(currentTime)} / ${dur}`;
+  }
+
+  return <span>{prefix ? `${prefix}${display}` : display}</span>;
 }

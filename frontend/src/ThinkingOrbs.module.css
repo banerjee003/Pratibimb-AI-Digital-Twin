@@ -1,0 +1,234 @@
+/* ══════════════════════════════════════════════════════
+   COMPACT PILL (Text & Audio chat thinking)
+══════════════════════════════════════════════════════ */
+.orbCard {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  padding: 10px 20px 10px 14px;
+  background: #181818;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  animation: orbPulse 2.4s ease-in-out infinite;
+  user-select: none;
+}
+
+@keyframes orbPulse {
+  0% {
+    box-shadow: 0 0 0 0px rgba(139, 92, 246, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 0 14px rgba(139, 92, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0px rgba(139, 92, 246, 0);
+  }
+}
+
+.orbBubbleLabel {
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 400;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.orbBubbleLabel::after {
+  content: '';
+  display: inline-block;
+  width: 1.4em;
+  animation: trailingDots 1.5s steps(4, end) infinite;
+}
+
+@keyframes trailingDots {
+  0%   { content: ''; }
+  25%  { content: '.'; }
+  50%  { content: '..'; }
+  75%  { content: '...'; }
+  100% { content: ''; }
+}
+
+/* ══════════════════════════════════════════════════════
+   VIDEO MULTI-PHASE THINKING CARD
+══════════════════════════════════════════════════════ */
+.videoThinkingWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: min(300px, calc(100% - 48px));
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 7 small step dots row */
+.phaseStepRow {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  padding-left: 2px;
+}
+
+.phaseStepDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  transition: background 0.4s ease, transform 0.3s ease, box-shadow 0.4s ease;
+}
+
+/* Main square card */
+.videoThinkingBox {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 22px;
+  background: radial-gradient(ellipse at 40% 35%, #1e1f2e 0%, #0b0c14 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: box-shadow 0.6s ease;
+}
+
+/* 360deg Rotating Conic Border */
+.videoThinkingBorder {
+  position: absolute;
+  inset: -50%;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.55;
+  mix-blend-mode: screen;
+}
+
+@keyframes spinBorder {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Scale up the 64px canvas orb to ~110px without pixelation */
+.orbScaler {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: scale(1.72);
+  transform-origin: center center;
+  position: relative;
+  z-index: 1;
+}
+
+/* Bottom-right progress percent badge */
+.videoProgressPercent {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid;
+  padding: 3px 9px;
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  z-index: 3;
+  user-select: none;
+  transition: border-color 0.4s ease;
+}
+
+/* Status text beneath the box */
+.videoPhaseStatus {
+  display: flex;
+  align-items: center;
+  padding-left: 2px;
+  min-height: 22px;
+}
+
+.videoPhaseLabel {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  white-space: nowrap;
+  transition: color 0.4s ease;
+  animation: phaseLabelIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.videoPhaseLabel::after {
+  content: '';
+  display: inline-block;
+  width: 1.4em;
+  animation: trailingDots 1.5s steps(4, end) infinite;
+}
+
+@keyframes phaseLabelIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Action button strip below phase label */
+.actionStrip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: 100%;
+  margin-top: 4px;
+}
+
+/* Voice preview capsule button */
+.voicePreviewBtn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  padding: 5px 12px;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.voicePreviewBtn:hover {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+/* Cancel Stop Generation Button */
+.cancelBtn {
+  background: rgba(255, 68, 68, 0.15);
+  color: #ff4444;
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  padding: 5px 12px;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.cancelBtn:hover {
+  background: rgba(255, 68, 68, 0.25);
+  border-color: rgba(255, 68, 68, 0.5);
+}

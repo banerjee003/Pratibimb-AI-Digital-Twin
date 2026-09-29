@@ -2,6 +2,7 @@ import json
 import shutil
 import subprocess
 import uuid
+import wave
 from pathlib import Path
 from typing import Optional
 
@@ -9,10 +10,8 @@ from fastapi import FastAPI, Depends, File, Form, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from faster_whisper import WhisperModel
-
 from .auth import require_user, supabase_client
-from .config import MEDIA_DIR, FFMPEG_BIN
+from .config import MEDIA_DIR, FFMPEG_BIN, GEMINI_API_KEY, GEMINI_MODEL
 from .gemini_service import ask_persona
 from .tts_service import generate_xtts, ensure_xtts_server, normalize_reference
 from .jobs import init_db, create_job, get_job, delete_jobs_for_persona, cancel_job
@@ -51,8 +50,9 @@ WHISPER_PROMPTS = {
 def get_whisper_model():
     global _whisper_model
     if _whisper_model is None:
-        print("[Whisper] Loading 'small' multilingual model from D:\\models\\whisper...")
         try:
+            from faster_whisper import WhisperModel
+            print("[Whisper] Loading 'small' multilingual model from D:\\models\\whisper...")
             _whisper_model = WhisperModel(
                 "small",
                 device="cpu",
@@ -61,8 +61,13 @@ def get_whisper_model():
             )
             print("[Whisper] High-accuracy multilingual model ready.")
         except Exception as e:
-            print(f"[Whisper] Failed loading small model ({e}), falling back to base...")
-            _whisper_model = WhisperModel("base", device="cpu", compute_type="int8")
+            print(f"[Whisper] Failed loading small model ({e}), attempting base model...")
+            try:
+                from faster_whisper import WhisperModel
+                _whisper_model = WhisperModel("base", device="cpu", compute_type="int8")
+            except Exception as e2:
+                print(f"[Whisper] Faster-Whisper DLL unavailable ({e2}), will use Gemini STT fallback.")
+                return None
     return _whisper_model
 
 
@@ -130,14 +135,39 @@ def list_personas(user=Depends(require_user)):
         .table("personas")
         .select("*")
         .eq("user_id", user.id)
-        .order("created_at", desc=False)
         .execute()
         .data
         or []
     )
+    if not data:
+        return []
+
+    # Query latest message timestamps for this user's personas
+    recent_msgs = (
+        supabase_client()
+        .table("messages")
+        .select("persona_id,created_at")
+        .eq("user_id", user.id)
+        .order("created_at", desc=True)
+        .execute()
+        .data
+        or []
+    )
+
+    last_msg_map = {}
+    for m in recent_msgs:
+        pid = m.get("persona_id")
+        if pid and pid not in last_msg_map:
+            last_msg_map[pid] = m.get("created_at")
+
     for p in data:
+        pid = p.get("id")
+        p["last_used_at"] = last_msg_map.get(pid) or p.get("created_at") or ""
         p["photo_url"] = get_media_url(p.get("photo_path"))
         p["voice_url"] = get_media_url(p.get("voice_path"))
+
+    # Sort descending by last_used_at (most recently used first)
+    data.sort(key=lambda x: x.get("last_used_at") or "", reverse=True)
     return data
 
 
@@ -216,18 +246,32 @@ def get_persona(persona_id: str, user=Depends(require_user)):
 
 @app.get("/api/personas/{persona_id}/messages")
 def get_persona_messages(persona_id: str, user=Depends(require_user)):
-    data = (
-        supabase_client()
-        .table("messages")
-        .select("id,role,content,created_at")
-        .eq("persona_id", persona_id)
-        .eq("user_id", user.id)
-        .order("created_at", desc=False)
-        .execute()
-        .data
-        or []
-    )
-    return data
+    try:
+        data = (
+            supabase_client()
+            .table("messages")
+            .select("id,role,content,created_at")
+            .eq("persona_id", persona_id)
+            .eq("user_id", user.id)
+            .order("created_at", desc=False)
+            .execute()
+            .data
+            or []
+        )
+        return data
+    except Exception:
+        data = (
+            supabase_client(force_new=True)
+            .table("messages")
+            .select("id,role,content,created_at")
+            .eq("persona_id", persona_id)
+            .eq("user_id", user.id)
+            .order("created_at", desc=False)
+            .execute()
+            .data
+            or []
+        )
+        return data
 
 
 @app.put("/api/personas/{persona_id}")
@@ -441,23 +485,54 @@ async def transcribe_voice(
             whisper_lang = persona_lang or None
 
         model = get_whisper_model()
-        initial_prompt = WHISPER_PROMPTS.get(whisper_lang)
-        segments, info = model.transcribe(
-            str(wav_path),
-            language=whisper_lang,
-            initial_prompt=initial_prompt,
-            beam_size=5,
-            vad_filter=True,
-            condition_on_previous_text=False,
-        )
-        text = " ".join(segment.text.strip() for segment in segments).strip()
+        text = ""
+        detected_lang = whisper_lang or "en"
+
+        if model is not None:
+            try:
+                initial_prompt = WHISPER_PROMPTS.get(whisper_lang)
+                segments, info = model.transcribe(
+                    str(wav_path),
+                    language=whisper_lang,
+                    initial_prompt=initial_prompt,
+                    beam_size=5,
+                    vad_filter=True,
+                    condition_on_previous_text=False,
+                )
+                text = " ".join(segment.text.strip() for segment in segments).strip()
+                detected_lang = info.language
+            except Exception as w_exc:
+                print(f"[STT] Whisper error ({w_exc}), attempting Gemini multimodal STT fallback...")
+                text = ""
+
+        # Multimodal Gemini audio transcription fallback
+        if not text and GEMINI_API_KEY:
+            try:
+                import base64
+                b64_audio = base64.b64encode(wav_path.read_bytes()).decode("utf-8")
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
+                payload = {
+                    "contents": [{
+                        "parts": [
+                            {"text": f"Transcribe this voice recording accurately in {whisper_lang or 'its original language'}. Output ONLY the raw transcribed text with no markdown, quotes, notes, or timestamps."},
+                            {"inline_data": {"mime_type": "audio/wav", "data": b64_audio}}
+                        ]
+                    }]
+                }
+                g_res = requests.post(url, json=payload, timeout=20)
+                if g_res.status_code == 200:
+                    g_data = g_res.json()
+                    text = g_data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                    detected_lang = whisper_lang or "en"
+            except Exception as g_exc:
+                print(f"[STT] Gemini STT fallback error: {g_exc}")
 
         if not text:
             raise HTTPException(400, "I couldn't detect any speech. Please try again.")
 
         return {
             "text": text,
-            "language": info.language,
+            "language": detected_lang,
         }
     except HTTPException:
         raise
@@ -533,6 +608,7 @@ def chat(body: ChatRequest, user=Depends(require_user)):
         else:
             tts_lang = "en"
 
+        audio_duration = None
         try:
             audio = generate_xtts(
                 tts_text,
@@ -540,6 +616,14 @@ def chat(body: ChatRequest, user=Depends(require_user)):
                 tts_lang,
             )
             audio_url = "/media/" + audio.relative_to(MEDIA_DIR).as_posix()
+            if audio.exists():
+                try:
+                    with wave.open(str(audio), "rb") as wf:
+                        frames = wf.getnframes()
+                        rate = wf.getframerate()
+                        audio_duration = round(frames / float(rate), 2)
+                except Exception as w_err:
+                    print("[Chat] Wave duration calculation error:", w_err)
         except Exception as exc:
             print("[XTTS] Voice generation error:", exc)
 
@@ -553,7 +637,7 @@ def chat(body: ChatRequest, user=Depends(require_user)):
     except Exception as exc:
         print("[Chat] DB insert assistant message error:", exc)
 
-    return {"reply": reply, "audio_url": audio_url}
+    return {"reply": reply, "audio_url": audio_url, "duration": audio_duration}
 
 
 @app.post("/api/avatar-job")

@@ -10,7 +10,7 @@ XTTS_SERVER_URL = os.getenv("XTTS_SERVER_URL", "http://127.0.0.1:8020")
 _xtts_server_proc = None
 
 
-def ensure_xtts_server() -> bool:
+def ensure_xtts_server(wait: bool = False, max_wait: int = 15) -> bool:
     """Ensure the persistent warm XTTS server is running in the background."""
     global _xtts_server_proc
     try:
@@ -27,7 +27,7 @@ def ensure_xtts_server() -> bool:
     if _xtts_server_proc is None or _xtts_server_proc.poll() is not None:
         try:
             env = os.environ.copy()
-            env["TTS_HOME"] = os.getenv("TTS_HOME", r"D:\models")
+            env["TTS_HOME"] = os.getenv("TTS_HOME", r"D:\models\tts")
             env["COQUI_TOS_AGREED"] = "1"
             if FFMPEG_BIN:
                 ffmpeg_path = Path(FFMPEG_BIN)
@@ -47,6 +47,18 @@ def ensure_xtts_server() -> bool:
         except Exception as e:
             print("[XTTS] Could not auto-start XTTS server:", e)
             return False
+
+    if wait:
+        import time
+        start_t = time.time()
+        while time.time() - start_t < max_wait:
+            try:
+                r = requests.get(f"{XTTS_SERVER_URL}/health", timeout=1)
+                if r.status_code == 200:
+                    return True
+            except Exception:
+                pass
+            time.sleep(1)
     return False
 
 
@@ -140,7 +152,7 @@ def generate_xtts(text: str, reference: Path, language: str) -> Path:
     tts_repetition_penalty = float(os.getenv("TTS_REPETITION_PENALTY", "2.0"))
 
     # Fast Path: Use persistent warm XTTS server (~1-2 seconds)
-    for _ in range(3):
+    for attempt in range(4):
         try:
             resp = requests.post(
                 f"{XTTS_SERVER_URL}/tts",
@@ -159,9 +171,9 @@ def generate_xtts(text: str, reference: Path, language: str) -> Path:
             if resp.status_code == 200 and out.exists():
                 return polish_output_audio(out)
         except Exception as exc:
-            ensure_xtts_server()
+            ensure_xtts_server(wait=True, max_wait=10)
             import time
-            time.sleep(1.5)
+            time.sleep(1)
 
     # Fallback: direct cold-start subprocess execution
     if not Path(XTTS_PYTHON).exists():

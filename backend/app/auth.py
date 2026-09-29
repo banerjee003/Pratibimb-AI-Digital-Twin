@@ -11,10 +11,10 @@ _auth_client: Client | None = None
 _db_client: Client | None = None
 
 
-def auth_client() -> Client:
+def auth_client(force_new: bool = False) -> Client:
     global _auth_client
 
-    if _auth_client is None:
+    if force_new or _auth_client is None:
         if not SUPABASE_URL or not SUPABASE_ANON_KEY:
             raise RuntimeError("Supabase authentication is not configured.")
 
@@ -26,10 +26,10 @@ def auth_client() -> Client:
     return _auth_client
 
 
-def supabase_client() -> Client:
+def supabase_client(force_new: bool = False) -> Client:
     global _db_client
 
-    if _db_client is None:
+    if force_new or _db_client is None:
         if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
             raise RuntimeError("Supabase service key is not configured.")
 
@@ -58,7 +58,16 @@ def require_user(authorization: str | None = Header(default=None)):
 
         return user
 
+    except HTTPException:
+        raise
     except Exception:
+        # Transient connection drop retry with a fresh client
+        try:
+            user = auth_client(force_new=True).auth.get_user(token).user
+            if user:
+                return user
+        except Exception:
+            pass
         raise HTTPException(
             status_code=401,
             detail="Invalid or expired session.",

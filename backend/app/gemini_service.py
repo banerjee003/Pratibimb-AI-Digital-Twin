@@ -67,19 +67,20 @@ CORE CONVERSATION RULES:
     })
 
     candidate_models = []
-    primary = (GEMINI_MODEL or "gemini-3.6-flash").replace("models/", "")
+    primary = (GEMINI_MODEL or "gemini-3.5-flash-lite").replace("models/", "")
     for m in [
         primary,
-        "gemini-3.6-flash",
-        "gemini-3.1-flash-lite-preview",
-        "gemini-3.8-flash-tts",
+        "gemini-3.5-flash-lite",
+        "gemini-flash-lite-latest",
         "gemini-robotics-er-2-preview",
-        "gemini-flash-latest",
+        "gemini-3-flash-preview",
+        "gemini-3.8-flash-tts",
+        "gemini-3.1-flash-lite-preview",
+        "gemini-3.1-flash-lite",
+        "gemini-3.6-flash",
         "gemini-3.5-flash",
         "gemini-3.7-flash",
         "gemini-3.8-flash",
-        "gemini-3.1-flash-lite",
-        "gemini-flash-lite-latest",
     ]:
         clean = m.replace("models/", "").strip()
         if clean and clean not in candidate_models:
@@ -95,29 +96,27 @@ CORE CONVERSATION RULES:
             "contents": contents,
         }
 
-        for attempt in range(2):
-            try:
-                resp = requests.post(url, params={"key": GEMINI_API_KEY}, json=payload, timeout=25)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    candidates = data.get("candidates", [])
-                    if candidates:
-                        parts = candidates[0].get("content", {}).get("parts", [])
-                        text = "".join(p.get("text", "") for p in parts).strip()
-                        if text:
-                            return text
-                elif resp.status_code in (503, 429, 500):
-                    logger.warning("Gemini model %s returned HTTP %s (attempt %d/2)", model_name, resp.status_code, attempt + 1)
-                    last_error = f"HTTP {resp.status_code}: {resp.text[:200]}"
-                    time.sleep(0.4)
-                    continue
-                else:
-                    last_error = f"HTTP {resp.status_code}: {resp.text[:200]}"
-                    break
-            except Exception as exc:
-                logger.warning("Gemini model %s request exception: %s", model_name, exc)
-                last_error = str(exc)
-                time.sleep(0.3)
+        try:
+            resp = requests.post(url, params={"key": GEMINI_API_KEY}, json=payload, timeout=8)
+            if resp.status_code == 200:
+                data = resp.json()
+                candidates = data.get("candidates", [])
+                if candidates:
+                    parts = candidates[0].get("content", {}).get("parts", [])
+                    text = "".join(p.get("text", "") for p in parts).strip()
+                    if text:
+                        return text
+            elif resp.status_code in (503, 429, 500):
+                logger.warning("Gemini model %s returned HTTP %s; switching to next fallback candidate", model_name, resp.status_code)
+                last_error = f"HTTP {resp.status_code}: {resp.text[:200]}"
+                continue
+            else:
+                last_error = f"HTTP {resp.status_code}: {resp.text[:200]}"
+                continue
+        except Exception as exc:
+            logger.warning("Gemini model %s request exception: %s; switching to next fallback candidate", model_name, exc)
+            last_error = str(exc)
+            continue
 
     logger.error("All Gemini model attempts exhausted: %s. Returning graceful fallback.", last_error)
     return graceful_fallback
