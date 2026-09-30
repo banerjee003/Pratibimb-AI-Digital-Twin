@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Filter, LayoutGrid, Star, User, Briefcase, Sparkles, Plus, PenLine, LogOut, Trash2 } from 'lucide-react';
+import { BookOpen, ChevronDown, ChevronUp, MessageSquare, LogOut, User as UserIcon, Plus } from 'lucide-react';
 import SearchBar from './SearchBar';
 import AuthPage from './AuthPage';
 import CreatePersonaModal from './CreatePersonaModal';
@@ -7,6 +7,8 @@ import DeletePersonaModal from './DeletePersonaModal';
 import RollingAnimation from './RollingAnimation';
 import LoadingScreen from './LoadingScreen';
 import ChatPage from './ChatPage';
+import PublicLandingPage from './PublicLandingPage';
+import PersonaScrollGallery from './PersonaScrollGallery';
 import { supabase } from './lib/supabase';
 import { API } from './lib/config';
 import fullLogo4 from './assets/full logo4.png';
@@ -34,10 +36,10 @@ function ParticleCanvas() {
     function randomBetween(a, b) { return a + Math.random() * (b - a); }
 
     const COLORS = [
-      'rgba(0,229,255,',       // electric cyan
-      'rgba(22,139,255,',      // neon blue
-      'rgba(124,61,255,',      // electric violet
-      'rgba(168,85,247,',      // soft violet
+      'rgba(3,4,94,',       // deep sapphire
+      'rgba(2,62,138,',     // rich navy sapphire
+      'rgba(0,119,182,',    // sapphire ocean blue
+      'rgba(0,150,199,',    // soft sapphire blue
     ];
 
     function spawnParticle() {
@@ -78,8 +80,7 @@ function ParticleCanvas() {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx.fillStyle = p.color + (p.alpha * fade).toFixed(3) + ')';
-        ctx.shadowColor = p.color + '0.6)';
-        ctx.shadowBlur = 6;
+        ctx.shadowBlur = 0;
         ctx.fill();
 
         if (p.life >= p.maxLife) {
@@ -277,11 +278,45 @@ export default function App() {
     window.history.pushState(null, '', window.location.pathname);
   };
 
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [showProductStory, setShowProductStory] = useState(false);
+  const userMenuRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setUserMenuOpen(false);
+      }
+    }
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        setUserMenuOpen(false);
+      }
+    }
+    if (userMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [userMenuOpen]);
+
+  const getDisplayName = (u) => {
+    if (!u) return 'USER';
+    const fullName = u.user_metadata?.full_name || u.user_metadata?.name;
+    if (fullName) return fullName.toUpperCase();
+    const emailName = u.email ? u.email.split('@')[0] : 'USER';
+    return emailName.replace(/[._-]/g, ' ').toUpperCase();
+  };
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setSession(null);
     setUser(null);
     setPersonas([]);
+    setUserMenuOpen(false);
     handleCloseChat();
   };
 
@@ -371,199 +406,188 @@ export default function App() {
     <>
       {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
 
-      <div className={styles.page}>
-        {/* Background Visual Elements */}
-        <ParticleCanvas />
-        <div className={styles.blob1} aria-hidden="true" />
-        <div className={styles.blob2} aria-hidden="true" />
-        <div className={styles.blob3} aria-hidden="true" />
-        <div className={styles.grid} aria-hidden="true" />
-
-        {/* ── Floating Rolling Animation ── */}
-        <RollingAnimation />
-
-        {/* ── Navbar (52px transparent) ── */}
-        <header className={styles.header}>
-          <a
-            href="/"
-            className={styles.logo}
-            onClick={(e) => {
-              e.preventDefault();
-              closeAuth();
-            }}
-          >
-            <img
-              src={fullLogo4}
-              alt="Pratibimb"
-              className={styles.logoImg}
-              onError={(e) => {
-                e.target.style.display = 'none';
-                const span = document.createElement('span');
-                span.textContent = 'Pratibimb';
-                span.className = styles.logoFallback;
-                e.target.parentNode.appendChild(span);
+      {(!user || showProductStory) ? (
+        <PublicLandingPage
+          onSignIn={() => { setShowProductStory(false); openAuth('signin'); }}
+          onSignUp={() => { setShowProductStory(false); openAuth('signup'); }}
+          onExploreWorkspace={() => setShowProductStory(false)}
+        />
+      ) : (
+        <div className={styles.page}>
+          {/* Background Visual Elements */}
+          <ParticleCanvas />
+          <div className={styles.blob1} aria-hidden="true" />
+          <div className={styles.blob2} aria-hidden="true" />
+          <div className={styles.blob3} aria-hidden="true" />
+          {/* ── Navbar (52px transparent) ── */}
+          <header className={styles.header}>
+            <a
+              href="/"
+              className={styles.logo}
+              onClick={(e) => {
+                e.preventDefault();
+                setShowProductStory(false);
+                closeAuth();
               }}
-            />
-          </a>
+            >
+              <img
+                src={fullLogo4}
+                alt="Pratibimb"
+                className={styles.logoImg}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  const span = document.createElement('span');
+                  span.textContent = 'Pratibimb';
+                  span.className = styles.logoFallback;
+                  e.target.parentNode.appendChild(span);
+                }}
+              />
+            </a>
 
-          <nav className={styles.nav}>
-            {user ? (
-              <>
-                <div className={styles.userBadge}>
-                  <span className={styles.userAvatarDot} />
-                  <span>{user.email?.split('@')[0]}</span>
-                </div>
-                <button className={styles.signOutBtn} onClick={handleSignOut} title="Sign Out">
-                  <LogOut size={13} />
-                  <span>Sign Out</span>
-                </button>
-              </>
-            ) : (
-              <>
+            <nav className={styles.nav}>
+              <button
+                type="button"
+                className={styles.productStoryBtn}
+                onClick={() => setShowProductStory(true)}
+              >
+                <BookOpen size={14} />
+                <span>Product Story</span>
+              </button>
+
+              <div className={styles.userMenuContainer} ref={userMenuRef}>
                 <button
-                  className={`${styles.signInBtn} ${authModal === 'signin' ? styles.btnActive : ''}`}
-                  onClick={() => openAuth('signin')}
+                  type="button"
+                  className={`${styles.userDropdownTrigger} ${userMenuOpen ? styles.userDropdownTriggerActive : ''}`}
+                  onClick={() => setUserMenuOpen((prev) => !prev)}
+                  aria-expanded={userMenuOpen}
+                  aria-haspopup="true"
                 >
-                  Sign In
+                  <span>{getDisplayName(user)}</span>
+                  {userMenuOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                 </button>
-                <button
-                  className={`${styles.createBtn} ${authModal === 'signup' ? styles.btnActiveGlow : ''}`}
-                  onClick={() => openAuth('signup')}
-                >
-                  Create Account
-                </button>
-              </>
-            )}
-          </nav>
-        </header>
 
-        {/* ── Main Landing Hero ── */}
-        <main className={styles.main}>
-          <h1 className={styles.heading}>Bring Anyone<br />Back to Life.</h1>
+                {userMenuOpen && (
+                  <div className={styles.userMenuDropdown} role="menu">
+                    <div className={styles.userMenuHeader}>
+                      <div className={styles.userMenuAvatar}>
+                        <UserIcon size={18} />
+                      </div>
+                      <div className={styles.userMenuInfo}>
+                        <span className={styles.userMenuName}>{getDisplayName(user)}</span>
+                        <span className={styles.userMenuEmail} title={user.email || ''}>
+                          {user.email || ''}
+                        </span>
+                      </div>
+                    </div>
 
-          <p className={styles.subheading}>
-            Preserve the way they look, sound, and speak—and create a digital
-            presence you can actually talk to.
-          </p>
+                    <div className={styles.userMenuDivider} />
 
-          <div className={styles.searchWrapper}>
-            <SearchBar
-              onSubmit={handleSubmit}
-              onUploadClick={openCreateModal}
-              placeholder="Describe the persona or attach references..."
-            />
-          </div>
+                    <button
+                      type="button"
+                      className={styles.userMenuItem}
+                      role="menuitem"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        if (personas.length > 0) {
+                          startChat(personas[0]);
+                        } else {
+                          startChat(DEMO_PERSONAS[0]);
+                        }
+                      }}
+                    >
+                      <MessageSquare size={15} />
+                      <span>Go to Messages</span>
+                    </button>
 
-          {/* Trust row */}
-          <div className={styles.trustRow}>
-            <span className={styles.trustItem}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
-              No credit card required
-            </span>
-            <span className={styles.trustDivider}>·</span>
-            <span className={styles.trustItem}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-              End-to-end encrypted
-            </span>
-            <span className={styles.trustDivider}>·</span>
-            <span className={styles.trustItem}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
-              Privacy first
-            </span>
-          </div>
-        </main>
+                    <button
+                      type="button"
+                      className={`${styles.userMenuItem} ${styles.userMenuItemSignOut}`}
+                      role="menuitem"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        handleSignOut();
+                      }}
+                    >
+                      <LogOut size={15} />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </nav>
+          </header>
 
-        {/* ── Gallery Section ── */}
-        <section className={styles.gallerySection}>
-          <div className={styles.galleryHeader}>
-            <h2 className={styles.galleryTitle}>{user ? 'Your Personas' : 'Gallery'}</h2>
-          </div>
+          {/* ── Main Landing Hero ── */}
+          <main className={styles.main}>
+            <h1 className={styles.heading}>
+              <span className={styles.headingLine}>Bring Anyone</span>
+              <span className={styles.headingLine}>Back to Life.</span>
+            </h1>
 
-          <div className={styles.filterScroll}>
-            <div className={styles.filterGroupLeft}>
-              <button className={styles.filterBtn}>
-                <Filter size={14} /> Filter <span className={styles.filterChevron}>▼</span>
-              </button>
-              <button className={`${styles.filterBtn} ${styles.filterActive}`}>
-                <LayoutGrid size={14} /> All
-              </button>
-              <button className={styles.filterBtn}>
-                <Star size={14} /> Featured
-              </button>
-              <button className={styles.filterBtn}>
-                <User size={14} /> Character
-              </button>
-              <button className={styles.filterBtn}>
-                <Briefcase size={14} /> Professional
-              </button>
-              <button className={styles.filterBtn}>
-                <Sparkles size={14} /> Entertainment
+            <p className={styles.subheading}>
+              Preserve the way they look, sound, and speak—and create a digital
+              presence you can actually talk to.
+            </p>
+
+            <div className={styles.searchWrapper}>
+              <div className={styles.searchScaler}>
+                <SearchBar
+                  onSubmit={handleSubmit}
+                  onUploadClick={openCreateModal}
+                  placeholder="Describe the persona or attach references..."
+                />
+              </div>
+            </div>
+
+            {/* Trust row */}
+            <div className={styles.trustRow}>
+              <span className={styles.trustItem}>
+                <span className={styles.trustIconCheck}>✓</span>
+                NO CREDIT CARD REQUIRED
+              </span>
+              <span className={styles.trustDivider}>·</span>
+              <span className={styles.trustItem}>
+                <span className={styles.trustIconLock}>🔒</span>
+                END-TO-END ENCRYPTED
+              </span>
+              <span className={styles.trustDivider}>·</span>
+              <span className={styles.trustItem}>
+                <span className={styles.trustIconShield}>🛡</span>
+                PRIVACY FIRST
+              </span>
+            </div>
+          </main>
+
+          {/* ── 3D Scroll Conveyor Persona Gallery ── */}
+          <div className={styles.galleryWrapperHome}>
+            <div className={styles.galleryHeaderHome}>
+              <h2 className={styles.galleryTitleHome}>YOUR PERSONAS</h2>
+
+              {/* Rolling Animation S-Curve sweeping across the header */}
+              <RollingAnimation />
+
+              <button className={styles.createModelBtn} onClick={openCreateModal}>
+                <Plus size={15} />
+                <span>Create Persona</span>
               </button>
             </div>
-            <button className={styles.createModelBtn} onClick={openCreateModal}>
-              <Plus size={14} /> Create Persona
-            </button>
+
+            <PersonaScrollGallery
+              personas={personas.length > 0 ? personas : DEMO_PERSONAS}
+              resolvePhotoUrl={(p) => {
+                if (!p) return 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=600';
+                if (p.photo_url) {
+                  return p.photo_url.startsWith('http') ? p.photo_url : `${API}${p.photo_url}`;
+                }
+                return p.image || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=600';
+              }}
+              onChat={startChat}
+              onEdit={handleEditPersona}
+              onDelete={setDeletingPersona}
+            />
           </div>
-
-          <div className={styles.galleryGrid}>
-            {user && personas.length === 0 && !loadingPersonas && (
-              <div className={styles.emptyGalleryPrompt}>
-                <Sparkles size={32} color="#6366f1" />
-                <p>You haven't created any AI Personas yet.</p>
-                <button className={styles.createModelBtn} onClick={openCreateModal}>
-                  <Plus size={14} /> Create Your First Persona
-                </button>
-              </div>
-            )}
-
-            {(user && personas.length > 0 ? personas : (user ? [] : DEMO_PERSONAS)).map((p) => {
-              const photo = p.photo_url
-                ? (p.photo_url.startsWith('http') ? p.photo_url : `${API}${p.photo_url}`)
-                : 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400';
-
-              return (
-                <div key={p.id} className={styles.galleryCard}>
-                  <img src={photo} alt={p.name} className={styles.galleryCardBg} />
-                  <div className={styles.galleryCardContent}>
-                    <h4 className={styles.personaName}>{p.name}</h4>
-                    <p className={styles.personaDesc}>
-                      {p.notes || `${p.tone || 'Casual'} tone · ${p.language?.toUpperCase() || 'EN'}`}
-                    </p>
-                    <div className={styles.cardActions}>
-                      <button className={styles.resumeBtn} onClick={() => startChat(p)}>
-                        Resume Chat
-                      </button>
-                      <button
-                        className={styles.editBtn}
-                        title="Edit Persona"
-                        aria-label="Edit Persona"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditPersona(p);
-                        }}
-                      >
-                        <PenLine size={16} />
-                      </button>
-                      {user && !p.id.startsWith('demo-') && (
-                        <button
-                          className={styles.deleteBtn}
-                          title="Delete Persona"
-                          aria-label="Delete Persona"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDeletingPersona(p);
-                          }}
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+        </div>
+      )}
 
         {/* ── Chat Page Override ── */}
         {activeChat && (
@@ -605,7 +629,6 @@ export default function App() {
           onClose={() => setDeletingPersona(null)}
           onDeleted={handlePersonaDeleted}
         />
-      </div>
     </>
   );
 }

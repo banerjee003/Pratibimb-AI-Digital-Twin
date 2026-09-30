@@ -5,41 +5,24 @@ export default function RollingAnimation() {
   const inText = "Can you summarize yesterday's meeting?\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0What time is the sync tomorrow?\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Could you draft an email to the design team?\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0What were the key takeaways from the Q3 report?\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0How is the new campaign performing?\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0".repeat(30);
   const outText = "Summarizing meeting notes...\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Sync is scheduled for 2 PM tomorrow.\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Drafting email to the design team...\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Q3 report shows a 15% engagement increase.\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0The new campaign is exceeding expectations.\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0".repeat(30);
 
-  /**
-   * A tall vertical S-curve that bridges the hero section to the gallery.
-   *
-   * ViewBox: 0 0 1920 900
-   *
-   * The S is oriented vertically so the user's eye follows it DOWNWARD:
-   *
-   *   ① Grey text enters from top-left
-   *   ② Upper belly sweeps to the RIGHT (eye moves right + down)
-   *   ③ Transcriber box sits at center (960, 450)
-   *   ④ Lower belly sweeps back to the LEFT (eye moves left + down)
-   *   ⑤ Black ribbon exits at bottom, pointing toward gallery
-   *
-   * This creates a natural scanning motion: top-left → center → bottom
-   * guiding the user's gaze from the hero headline down into the gallery.
-   */
   return (
-    <section className={styles.rollingSection}>
+    <div className={styles.rollingWrapper}>
       <div className={styles.container}>
-
         <svg
-          viewBox="0 0 1920 520"
+          viewBox="0 0 1920 220"
           className={styles.svgLayer}
           preserveAspectRatio="xMidYMid meet"
         >
           <defs>
-            {/* Upper wave — enters left, crests, slopes into center capsule (960, 260) */}
+            {/* Upper wave — enters upper-left, crests smoothly at Y=35 above 'YOUR PERSONAS', slopes into center capsule (960, 110) */}
             <path
               id="path-in"
-              d="M -100 150 C 200 60, 620 170, 960 260"
+              d="M -80 100 C 320 15, 680 60, 960 110"
             />
-            {/* Lower wave — continues from (960, 260) with identical slope, valleys, and swoops up to the right */}
+            {/* Lower wave — continues seamlessly from (960, 110) with matching tangent slope down to the lower right */}
             <path
               id="path-out"
-              d="M 960 260 C 1300 350, 1650 400, 2020 220"
+              d="M 960 110 C 1240 155, 1600 185, 2060 205"
             />
           </defs>
 
@@ -68,22 +51,19 @@ export default function RollingAnimation() {
           </text>
         </svg>
 
-        {/* Transcriber at SVG (960, 450) → left: 50%, top: 50% */}
+        {/* Transcriber pill at exact center (960, 110) */}
         <div className={styles.transcriberBox}>
-          <svg width="46" height="28" viewBox="0 0 46 28" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <path className={styles.waveBar} d="M 2 12 L 2 16" />
-            <path className={styles.waveBar} d="M 7 10 L 7 18" />
-            <path className={styles.waveBar} d="M 12 5 L 12 23" />
-            <path className={styles.waveBar} d="M 17 9 L 17 19" />
-            <path className={styles.waveBar} d="M 22 11 L 22 17" />
-            <path className={styles.waveBar} d="M 27 7 L 27 21" />
-            <path className={styles.waveBar} d="M 32 5 L 32 23" />
-            <path className={styles.waveBar} d="M 37 9 L 37 19" />
-            <path className={styles.waveBar} d="M 42 12 L 42 16" />
+          <svg width="28" height="18" viewBox="0 0 28 18" fill="none" stroke="#111218" strokeWidth="2.4" strokeLinecap="round">
+            <path className={styles.waveBar} d="M 2 9 L 2 11" />
+            <path className={styles.waveBar} d="M 6 6 L 6 13" />
+            <path className={styles.waveBar} d="M 10 3 L 10 16" />
+            <path className={styles.waveBar} d="M 14 1 L 14 18" />
+            <path className={styles.waveBar} d="M 18 4 L 18 15" />
+            <path className={styles.waveBar} d="M 22 6 L 22 13" />
+            <path className={styles.waveBar} d="M 26 9 L 26 11" />
           </svg>
         </div>
-
       </div>
-    </section>
+    </div>
   );
 }

@@ -1,0 +1,650 @@
+/* PersonaScrollGallery.module.css
+ * Precision recreation of A24 television gallery layout:
+ * - 3D diagonal conveyor trajectory (~28° inclination)
+ * - Rectangular portrait cards (NOT CDs/discs)
+ * - Top-left editorial info dossier with Playfair Display typography
+ * - Bottom review quote columns with gold 5-star ratings
+ * - Minimalist monospace counter
+ * - Enhanced interactive voice chat CTA button
+ */
+
+/* ── Section wrapper ───────────────────────────────────────────────────── */
+.section {
+  position: relative;
+  width: 100%;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.sectionMounted {
+  opacity: 1;
+}
+
+/* ── Full-viewport sticky pane ─────────────────────────────────────────── */
+.sticky {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background: #111;
+  perspective: 1400px;
+  transform-style: preserve-3d;
+  user-select: none;
+}
+
+/* ── Ambient background conveyor aura ──────────────────────────────────── */
+.ambientConveyorTrack {
+  display: none;
+}
+
+.ambientCenterGlow {
+  display: none;
+}
+
+/* ── Top-Left Editorial Info Panel (A24 experience_info) ────────────────── */
+.infoPanel {
+  position: absolute;
+  top: 48px;
+  left: 52px;
+  width: clamp(280px, 24vw, 380px);
+  z-index: 60;
+  pointer-events: auto;
+  animation: panelFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes panelFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.infoSuper {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: #94a3b8;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.infoTitle {
+  font-family: 'Syne', 'Space Grotesk', -apple-system, sans-serif;
+  font-size: clamp(1.8rem, 2.8vw, 2.6rem);
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: 0 0 20px 0;
+  text-transform: uppercase;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.infoMetaTable {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 22px;
+}
+
+.metaRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.metaLabel {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: rgba(255, 255, 255, 0.42);
+  text-transform: uppercase;
+}
+
+.metaValue {
+  font-family: 'Space Grotesk', -apple-system, sans-serif;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.88);
+  font-weight: 500;
+  text-align: right;
+  letter-spacing: 0.01em;
+}
+
+.metaValueHighlight {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #34d399;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: none;
+  display: inline-block;
+}
+
+.metaBioRow {
+  padding: 12px 0 0 0;
+}
+
+.metaBioText {
+  font-family: 'Space Grotesk', -apple-system, sans-serif;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 6px 0 0 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.infoActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.primaryChatBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  background: #03045E;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  color: #ffffff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: none;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.primaryChatBtn:hover {
+  background: #023E8A;
+  border-color: rgba(255, 255, 255, 0.32);
+  transform: translateY(-1px);
+  box-shadow: none;
+}
+
+.secondaryIconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  box-shadow: none;
+  transition: all 0.2s ease;
+}
+
+.secondaryIconBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.26);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: none;
+}
+
+.dangerIconBtn {
+  border-color: rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.08);
+  color: #f87171;
+  box-shadow: none;
+}
+
+.dangerIconBtn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #ffffff;
+  box-shadow: none;
+}
+
+/* ── 3D Conveyor Stage ─────────────────────────────────────────────────── */
+.stage {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* ── Card Wrapper ──────────────────────────────────────────────────────── */
+.cardWrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform, opacity, filter;
+  transform-origin: center center;
+  outline: none;
+}
+
+/* ── Rectangular Persona Card ──────────────────────────────────────────── */
+.card {
+  position: relative;
+  width: clamp(250px, 22vw, 360px);
+  aspect-ratio: 3 / 4;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #181818;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 16px 50px rgba(0, 0, 0, 0.65),
+    0 2px 10px rgba(0, 0, 0, 0.4);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+  cursor: pointer;
+}
+
+/* Subtle gloss rim line */
+.cardRim {
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.cardImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  user-select: none;
+  pointer-events: none;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cardGradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60%;
+  background: linear-gradient(
+    to top,
+    rgba(17, 17, 17, 0.98) 0%,
+    rgba(17, 17, 17, 0.70) 45%,
+    transparent 100%
+  );
+  z-index: 2;
+  pointer-events: none;
+}
+
+.cardFooter {
+  position: absolute;
+  bottom: 22px;
+  left: 22px;
+  right: 22px;
+  z-index: 4;
+  pointer-events: none;
+  transition: transform 0.3s ease;
+}
+
+.cardFooterWithCta {
+  bottom: 74px; /* Move name slightly up on active card so CTA sits gracefully below */
+}
+
+.cardIndexTag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.cardName {
+  font-family: 'Syne', 'Space Grotesk', -apple-system, sans-serif;
+  font-size: clamp(1rem, 1.3vw, 1.25rem);
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #ffffff;
+  margin: 0;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.cardTone {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 4px 0 0 0;
+  font-weight: 400;
+}
+
+/* Active card extra presence */
+.cardWrapperActive .card {
+  border-color: rgba(2, 62, 138, 0.6);
+  box-shadow: 0 24px 60px -10px rgba(0, 0, 0, 0.85);
+}
+
+.cardWrapperActive .card:hover {
+  border-color: rgba(2, 62, 138, 0.85);
+  box-shadow: 0 30px 80px -10px rgba(0, 0, 0, 0.9);
+}
+
+.cardWrapperActive .card:hover .cardImg {
+  transform: scale(1.04);
+}
+
+/* ── Enhanced Interactive "Start Voice Chat" CTA on Active Card ─────────── */
+.activeChatCta {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 36px);
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.activeChatPill {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: #03045E;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #FFFFFF;
+  font-family: 'JetBrains Mono', monospace;
+  box-shadow: none;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Shimmer sweep animation */
+.activeChatPill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.2) 50%, transparent 65%);
+  transform: translateX(-120%);
+  transition: transform 0.55s ease;
+}
+
+.cardWrapperActive .card:hover .activeChatPill::after,
+.activeChatPill:hover::after {
+  transform: translateX(120%);
+}
+
+.cardWrapperActive .card:hover .activeChatPill,
+.activeChatPill:hover {
+  transform: translateY(-2px);
+  background: #023E8A;
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: none;
+}
+
+/* Expanding glowing pulse aura - hidden */
+.pulseAura {
+  display: none;
+}
+
+@keyframes pulseAuraWave {
+  0% {
+    transform: scale(0.96);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(1.32);
+    opacity: 0;
+  }
+}
+
+/* Animated 4-bar dynamic audio equalizer soundwave */
+.soundWave {
+  display: flex;
+  align-items: center;
+  gap: 2.5px;
+  height: 14px;
+}
+
+.soundBar {
+  width: 2.5px;
+  background: #ffffff;
+  border-radius: 2px;
+  box-shadow: none;
+  animation: soundDance 1.2s ease-in-out infinite alternate;
+}
+
+.soundBar:nth-child(1) { height: 7px;  animation-delay: 0.0s; }
+.soundBar:nth-child(2) { height: 13px; animation-delay: 0.25s; }
+.soundBar:nth-child(3) { height: 9px;  animation-delay: 0.45s; }
+.soundBar:nth-child(4) { height: 14px; animation-delay: 0.15s; }
+
+@keyframes soundDance {
+  0% {
+    transform: scaleY(0.35);
+  }
+  100% {
+    transform: scaleY(1.05);
+  }
+}
+
+.chatBtnLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #FFFFFF;
+}
+
+.chatBtnArrow {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+  transition: transform 0.25s ease;
+}
+
+.cardWrapperActive .card:hover .chatBtnArrow,
+.activeChatPill:hover .chatBtnArrow {
+  transform: translateX(4px);
+}
+
+/* ── Bottom Editorial Reviews / Quotes (Mirrors A24) ────────────────────── */
+.reviewsWrapper {
+  position: absolute;
+  bottom: 42px;
+  left: clamp(340px, 38vw, 44vw);
+  right: clamp(180px, 18vw, 260px);
+  z-index: 60;
+  display: flex;
+  gap: clamp(24px, 3.5vw, 48px);
+  pointer-events: none;
+  animation: panelFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.reviewCol {
+  flex: 1;
+  min-width: 0;
+}
+
+.starRating {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: #fbbf24;
+  margin-bottom: 7px;
+}
+
+.starIcon {
+  filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.4));
+}
+
+.reviewSource {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 6px;
+}
+
+.reviewQuote {
+  font-family: 'Space Grotesk', -apple-system, sans-serif;
+  font-style: italic;
+  font-size: clamp(0.82rem, 0.95vw, 1.02rem);
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.42;
+  letter-spacing: -0.01em;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Bottom-Right Counter ───────────────────────────────────────────────── */
+.counter {
+  position: absolute;
+  bottom: 42px;
+  right: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  z-index: 60;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.counterNumbers {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.counterCurrent {
+  font-size: clamp(1.6rem, 2.2vw, 2.2rem);
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.counterDivider {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.counterTotal {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 500;
+}
+
+.counterDots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.counterDot {
+  width: 20px;
+  height: 3px;
+  border-radius: 2px;
+  border: none;
+  background: rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  padding: 0;
+}
+
+.counterDotActive {
+  width: 32px;
+  background: #03045E;
+  box-shadow: none;
+}
+
+/* ── Responsive Adaptations ─────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .infoPanel {
+    top: 36px;
+    left: 36px;
+    width: 300px;
+  }
+
+  .reviewsWrapper {
+    left: 36px;
+    bottom: 36px;
+    right: 180px;
+    gap: 20px;
+  }
+
+  .counter {
+    bottom: 36px;
+    right: 36px;
+  }
+}
+
+@media (max-width: 768px) {
+  .infoPanel {
+    position: absolute;
+    top: 24px;
+    left: 20px;
+    right: 20px;
+    width: auto;
+    padding: 16px 20px;
+    background: rgba(11, 12, 19, 0.88);
+    backdrop-filter: blur(16px);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .infoTitle {
+    font-size: 1.4rem;
+    margin-bottom: 8px;
+  }
+
+  .infoMetaTable {
+    display: none;
+  }
+
+  .card {
+    width: clamp(180px, 50vw, 240px);
+    border-radius: 16px;
+  }
+
+  .reviewsWrapper {
+    display: none;
+  }
+
+  .counter {
+    bottom: 24px;
+    right: 24px;
+  }
+
+  .counterCurrent {
+    font-size: 1.4rem;
+  }
+}

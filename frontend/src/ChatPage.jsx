@@ -609,7 +609,7 @@ export default function ChatPage({ persona, onClose, onEditPersona }) {
                     style={{
                       background: 'rgba(255, 255, 255, 0.08)',
                       border: '1px solid rgba(255, 255, 255, 0.15)',
-                      borderRadius: '50%',
+                      borderRadius: '8px',
                       width: '24px',
                       height: '24px',
                       display: 'flex',
@@ -882,21 +882,23 @@ export default function ChatPage({ persona, onClose, onEditPersona }) {
         </div>
 
         <div className={styles.inputArea}>
-          <SearchBar
-            placeholder={
-              responseMode === 'text' ? 'Write a message…' :
-                responseMode === 'audio' ? 'Type or record your voice question…' :
-                  'Ask a question to receive a lip-synced video…'
-            }
-            hideUpload={true}
-            responseMode={responseMode}
-            onResponseModeChange={setResponseMode}
-            showResponseModeSelector={true}
-            language={language}
-            onLanguageChange={setLanguage}
-            showLanguageSelector={true}
-            onSubmit={handleSend}
-          />
+          <div className={styles.searchScaler}>
+            <SearchBar
+              placeholder={
+                responseMode === 'text' ? 'Write a message…' :
+                  responseMode === 'audio' ? 'Type or record your voice question…' :
+                    'Ask a question to receive a lip-synced video…'
+              }
+              hideUpload={true}
+              responseMode={responseMode}
+              onResponseModeChange={setResponseMode}
+              showResponseModeSelector={true}
+              language={language}
+              onLanguageChange={setLanguage}
+              showLanguageSelector={true}
+              onSubmit={handleSend}
+            />
+          </div>
         </div>
       </main>
     </div>

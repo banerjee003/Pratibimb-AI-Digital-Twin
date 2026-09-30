@@ -58,7 +58,7 @@
   color: #555;
   cursor: pointer;
   padding: 9px;
-  border-radius: 10px;
+  border-radius: 8px;
   transition: color 0.2s, background 0.2s;
   display: flex;
   align-items: center;
@@ -72,7 +72,11 @@
 
 .iconBtn.active {
   color: #fff;
-  background: rgba(255, 255, 255, 0.08);
+  background: #03045E;
+}
+
+.iconBtn.active:hover {
+  background: #023E8A;
 }
 
 /* ── Main Area ───────────────────────────────────────── */
@@ -119,29 +123,34 @@
 }
 
 .name {
+  font-family: var(--font-hero, 'Syne', sans-serif);
   font-size: 1.05rem;
-  font-weight: 600;
+  font-weight: 700;
   color: #f4f4f5;
   margin: 0 0 3px;
   line-height: 1;
 }
 
 .modeTag {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
   font-size: 11.5px;
   color: rgba(255, 255, 255, 0.35);
   letter-spacing: 0.3px;
 }
 
 .closeBtn {
-  background: none;
-  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
   color: #666;
   cursor: pointer;
   padding: 8px;
-  transition: color 0.2s;
+  transition: color 0.2s, background 0.2s;
+  box-shadow: none;
 }
 
 .closeBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
   color: #fff;
 }
 
@@ -312,8 +321,8 @@
 .playBtn {
   width: 30px;
   height: 30px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: #03045E;
   border: none;
   color: #fff;
   display: flex;
@@ -321,12 +330,13 @@
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
+  box-shadow: none;
   transition: background 0.2s, transform 0.15s;
 }
 
 .playBtn:hover {
-  background: rgba(255, 255, 255, 0.22);
-  transform: scale(1.07);
+  background: #023E8A;
+  transform: scale(1.05);
 }
 
 .waveform {
@@ -547,20 +557,22 @@ video.videoThumb {
 .videoPlayBtn {
   width: 52px;
   height: 52px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.18);
-  border: 2px solid rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  background: #03045E;
+  border: 1px solid #023E8A;
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  box-shadow: none;
   backdrop-filter: blur(4px);
   transition: transform 0.18s, background 0.18s;
 }
 
 .videoPlayBtn:hover {
-  transform: scale(1.1);
-  background: rgba(255, 255, 255, 0.3);
+  background: #023E8A;
+  transform: scale(1.06);
 }
 
 /* Bottom scrubber bar */
@@ -617,8 +629,20 @@ video.videoThumb {
 
 /* ── Input ───────────────────────────────────────────── */
 .inputArea {
-  padding: 0 28px 28px;
+  padding: 10px 28px 28px;
   flex-shrink: 0;
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.searchScaler {
+  width: calc(100% / 1.15);
+  max-width: 680px;
+  transform: scale(1.15);
+  transform-origin: left bottom;
+  display: flex;
+  justify-content: flex-start;
 }
 
 /* ══════════════════════════════════════════════════════

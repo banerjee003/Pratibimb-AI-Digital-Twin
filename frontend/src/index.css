@@ -1,11 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
 :root {
+  --font-hero:        'Syne', sans-serif;
+  --font-display:     'Space Grotesk', sans-serif;
+  --font-mono:        'JetBrains Mono', monospace;
   --primary-bg:       #050814;
   --secondary-bg:     #0A1024;
   --card-surface:     #101936;
-  --primary-accent:   #00E5FF;
-  --secondary-accent: #168BFF;
+  --primary-accent:   #03045E;
+  --secondary-accent: #023E8A;
+  --sapphire-accent:  #0077B6;
   --purple-accent:    #7C3DFF;
   --glow-purple:      #A855F7;
   --primary-text:     #F4F7FF;
@@ -17,7 +19,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-display), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: #111;
   color: #F4F7FF;
   min-height: 100vh;

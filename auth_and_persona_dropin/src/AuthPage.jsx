@@ -176,6 +176,8 @@ export default function AuthPage({ initialMode = 'signin', onClose, onModeChange
               </div>
             </div>
 
+
+
             {/* Success state */}
             {submitted ? (
               <div className={styles.successBox}>

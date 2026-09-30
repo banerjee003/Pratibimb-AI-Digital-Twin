@@ -1,20 +1,14 @@
 /* RollingAnimation.module.css */
 
-/*
-  The animation spans from just below the navbar all the way down 
-  to cover the hero + lead into the gallery.
-  This lets the vertical S guide the user's eye top → bottom.
-*/
-.rollingSection {
+.rollingWrapper {
   position: absolute;
-  top: calc(72vh + 188px);
-  left: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, calc(-50% - 24px));
   width: 100vw;
-  height: 520px;
-  transform: translateY(-50%);
+  height: 220px;
   pointer-events: none;
   z-index: 2;
-  background-color: transparent;
   overflow: visible;
 }
 
@@ -34,82 +28,70 @@
   overflow: visible;
 }
 
-/* Grey incoming text with dark stroke for 3D crossing effect */
+/* Grey incoming text */
 .textIn {
-  font-family: inherit;
+  font-family: 'Space Grotesk', -apple-system, sans-serif;
   font-size: 20px;
-  fill: #a1a1aa;
-  stroke: #111;
-  stroke-width: 7px;
+  fill: #94A3B8;
+  stroke: #090A0F;
+  stroke-width: 4px;
   paint-order: stroke fill;
   stroke-linecap: round;
   stroke-linejoin: round;
   font-weight: 500;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
 }
 
 /* Thick stroke creates a solid black ribbon for outgoing text */
 .textOutBg {
-  font-family: inherit;
+  font-family: 'Space Grotesk', -apple-system, sans-serif;
   font-size: 20px;
-  fill: #111;
-  stroke: #111;
-  stroke-width: 50px;
+  fill: #111218;
+  stroke: #111218;
+  stroke-width: 46px;
   stroke-linecap: round;
   stroke-linejoin: round;
   paint-order: stroke fill;
   font-weight: 500;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
 }
 
 /* White foreground text rides on the ribbon */
 .textOutFg {
-  font-family: inherit;
+  font-family: 'Space Grotesk', -apple-system, sans-serif;
   font-size: 20px;
-  fill: #ffffff;
+  fill: #FFFFFF;
   font-weight: 600;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
 }
 
-/*
-  Transcriber at SVG (960, 260) in 1920×520 viewBox:
-    left = 960/1920 = 50%
-    top  = 260/520  = 50%
-*/
+/* Transcriber white pill in the center */
 .transcriberBox {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 92px;
-  height: 52px;
-  background: #ffffff;
-  border: 2px solid #18181b;
-  border-radius: 26px;
+  width: 64px;
+  height: 36px;
+  background: #FFFFFF;
+  border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #18181b;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  color: #111218;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
   z-index: 10;
   pointer-events: none;
 }
 
-@media (max-width: 768px) {
-  .transcriberBox {
-    transform: translate(-50%, -50%) scale(0.85);
-  }
-}
-
-/* Transcriber Box Waveform Animation */
 .waveBar {
-  transform-origin: center 14px;
+  transform-origin: center 9px;
   animation: wavePulse 1.2s ease-in-out infinite;
 }
 
 @keyframes wavePulse {
   0%, 100% {
-    transform: scaleY(0.7);
+    transform: scaleY(0.6);
   }
   50% {
     transform: scaleY(1.4);
@@ -123,6 +105,3 @@
 .waveBar:nth-child(5) { animation-delay: 0.5s; }
 .waveBar:nth-child(6) { animation-delay: 0.3s; }
 .waveBar:nth-child(7) { animation-delay: 0.6s; }
-.waveBar:nth-child(8) { animation-delay: 0.2s; }
-.waveBar:nth-child(9) { animation-delay: 0.4s; }
-

@@ -167,19 +167,19 @@
   align-items: center;
   gap: 5px;
   padding: 6px 12px;
-  border-radius: 20px;
+  border-radius: 8px;
   background: #0A1024;
   border: 1px solid #1B2745;
   color: #A8B3CC;
   font-size: 0.82rem;
   font-weight: 500;
-  font-family: inherit;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
   cursor: pointer;
   transition: border-color 0.2s, color 0.2s;
 }
 
 .pillBtn:hover {
-  border-color: #168BFF;
+  border-color: #023E8A;
   color: #F4F7FF;
 }
 
@@ -195,7 +195,7 @@
   justify-content: center;
   width: 34px;
   height: 34px;
-  border-radius: 50%;
+  border-radius: 8px;
   background: transparent;
   border: none;
   color: #A8B3CC;
@@ -237,23 +237,24 @@
   justify-content: center;
   width: 34px;
   height: 34px;
-  border-radius: 50%;
+  border-radius: 8px;
   background: #1B2745;
   border: none;
   color: #66708A;
   cursor: not-allowed;
-  transition: background 0.25s, color 0.25s, box-shadow 0.25s, transform 0.15s;
+  transition: background 0.25s, color 0.25s, transform 0.15s;
 }
 
 .sendBtn.sendReady {
-  background: linear-gradient(135deg, #00E5FF, #168BFF);
-  color: #050814;
+  background: #03045E;
+  color: #FFFFFF;
   cursor: pointer;
-  box-shadow: 0 0 16px rgba(0, 229, 255, 0.35);
+  box-shadow: none;
 }
 
 .sendBtn.sendReady:hover {
-  box-shadow: 0 0 24px rgba(0, 229, 255, 0.55);
+  background: #023E8A;
+  box-shadow: none;
   transform: translateY(-1px);
 }
 
@@ -274,11 +275,11 @@
   gap: 6px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 999px;
+  border-radius: 8px;
   padding: 5px 11px;
   color: #a1a1aa;
   font-size: 12.5px;
-  font-family: inherit;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -325,7 +326,7 @@
   min-width: 220px;
   background: #18181b;
   border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 14px;
+  border-radius: 8px;
   padding: 6px;
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(20px);
@@ -354,6 +355,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: #71717a;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
   padding: 6px 10px 4px;
 }
 
@@ -362,7 +364,7 @@
   align-items: center;
   gap: 10px;
   padding: 8px 10px;
-  border-radius: 9px;
+  border-radius: 6px;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -379,13 +381,13 @@
 }
 
 .dropdownItemActive {
-  background: rgba(56, 189, 248, 0.12);
-  color: #38bdf8;
+  background: #03045E;
+  color: #ffffff;
 }
 
 .dropdownItemActive:hover {
-  background: rgba(56, 189, 248, 0.18);
-  color: #38bdf8;
+  background: #023E8A;
+  color: #ffffff;
 }
 
 .itemIcon {
@@ -417,6 +419,6 @@
 }
 
 .itemCheck {
-  color: #38bdf8;
+  color: #ffffff;
   flex-shrink: 0;
 }

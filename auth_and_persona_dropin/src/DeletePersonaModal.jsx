@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { Trash2, AlertTriangle, X, Loader2 } from 'lucide-react';
-import { supabase } from './lib/supabase';
 import { API } from './lib/config';
 import styles from './DeletePersonaModal.module.css';
 
-export default function DeletePersonaModal({ persona, isOpen, onClose, onConfirm, onDeleted }) {
+export default function DeletePersonaModal({ persona, isOpen, onClose, onConfirm }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -14,21 +13,7 @@ export default function DeletePersonaModal({ persona, isOpen, onClose, onConfirm
     try {
       setLoading(true);
       setError('');
-      if (onConfirm) {
-        await onConfirm(persona);
-      } else if (onDeleted) {
-        const { data: sessionData } = await supabase.auth.getSession();
-        const token = sessionData?.session?.access_token;
-        const res = await fetch(`${API}/api/personas/${persona.id}`, {
-          method: 'DELETE',
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.detail || 'Failed to delete persona.');
-        }
-        onDeleted(persona.id);
-      }
+      await onConfirm(persona);
       onClose();
     } catch (err) {
       console.error('Failed to delete persona:', err);

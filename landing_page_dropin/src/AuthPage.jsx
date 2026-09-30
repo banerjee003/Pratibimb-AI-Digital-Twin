@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BorderBeam } from 'border-beam';
 import {
   Mail,
   Lock,
@@ -66,7 +67,7 @@ export default function AuthPage({ initialMode = 'signin', onClose, onModeChange
 
   const strength = calculateStrength(password);
   const strengthLabels = ['Too weak', 'Weak', 'Fair', 'Strong', 'Very Strong'];
-  const strengthColors = ['#EF4444', '#F59E0B', '#EAB308', '#10B981', '#0077B6'];
+  const strengthColors = ['#EF4444', '#F59E0B', '#EAB308', '#10B981', '#00E5FF'];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -130,7 +131,8 @@ export default function AuthPage({ initialMode = 'signin', onClose, onModeChange
     <div className={styles.overlay} onClick={onClose}>
       {/* Main Auth Card (Stop propagation to avoid closing when clicking inside) */}
       <div className={styles.cardWrapper} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.authCard}>
+        <BorderBeam size="sm" colorVariant="sunset" strength={0.8} active={true}>
+          <div className={styles.authCard}>
             {/* Close cross button on the right */}
             <button
               type="button"
@@ -138,7 +140,7 @@ export default function AuthPage({ initialMode = 'signin', onClose, onModeChange
               onClick={onClose}
               aria-label="Close modal"
             >
-              <X size={18} />
+              <X size={17} />
             </button>
 
             {/* Header / Tabs */}
@@ -176,6 +178,42 @@ export default function AuthPage({ initialMode = 'signin', onClose, onModeChange
               </div>
             </div>
 
+            {/* Social Logins */}
+            <div className={styles.socialRow}>
+              <button type="button" className={styles.socialBtn} title="Continue with Google">
+                <svg width="15" height="15" viewBox="0 0 24 24">
+                  <path
+                    fill="#EA4335"
+                    d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.9C6.2 7.4 8.8 5 12 5z"
+                  />
+                  <path
+                    fill="#4285F4"
+                    d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.3 14.7c-.2-.7-.4-1.5-.4-2.7s.1-2 .4-2.7L1.6 6.4C.6 8.4 0 10.6 0 13s.6 4.6 1.6 6.6l3.7-2.9z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.2 0-5.8-2.4-6.7-5.3L1.6 16C3.5 19.8 7.4 23 12 23z"
+                  />
+                </svg>
+                <span>Google</span>
+              </button>
+
+              <button type="button" className={styles.socialBtn} title="Continue with GitHub">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+                </svg>
+                <span>GitHub</span>
+              </button>
+            </div>
+
+            <div className={styles.divider}>
+              <span>or continue with email</span>
+            </div>
+
             {/* Success state */}
             {submitted ? (
               <div className={styles.successBox}>
@@ -209,7 +247,7 @@ export default function AuthPage({ initialMode = 'signin', onClose, onModeChange
                   <div className={styles.inputGroup}>
                     <label className={styles.label}>Full Name</label>
                     <div className={styles.inputWrapper}>
-                      <User size={18} className={styles.inputIcon} />
+                      <User size={15} className={styles.inputIcon} />
                       <input
                         type="text"
                         placeholder="Ankit Sharma"
@@ -226,7 +264,7 @@ export default function AuthPage({ initialMode = 'signin', onClose, onModeChange
                 <div className={styles.inputGroup}>
                   <label className={styles.label}>Email address</label>
                   <div className={styles.inputWrapper}>
-                    <Mail size={18} className={styles.inputIcon} />
+                    <Mail size={15} className={styles.inputIcon} />
                     <input
                       type="email"
                       placeholder="name@example.com"
@@ -249,7 +287,7 @@ export default function AuthPage({ initialMode = 'signin', onClose, onModeChange
                     )}
                   </div>
                   <div className={styles.inputWrapper}>
-                    <Lock size={18} className={styles.inputIcon} />
+                    <Lock size={15} className={styles.inputIcon} />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••••••"
@@ -264,7 +302,7 @@ export default function AuthPage({ initialMode = 'signin', onClose, onModeChange
                       onClick={() => setShowPassword(!showPassword)}
                       aria-label="Toggle password visibility"
                     >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
                   </div>
 
@@ -298,7 +336,7 @@ export default function AuthPage({ initialMode = 'signin', onClose, onModeChange
                   <div className={styles.inputGroup}>
                     <label className={styles.label}>Confirm Password</label>
                     <div className={styles.inputWrapper}>
-                      <ShieldCheck size={18} className={styles.inputIcon} />
+                      <ShieldCheck size={15} className={styles.inputIcon} />
                       <input
                         type={showConfirmPassword ? 'text' : 'password'}
                         placeholder="••••••••••••"
@@ -313,7 +351,7 @@ export default function AuthPage({ initialMode = 'signin', onClose, onModeChange
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         aria-label="Toggle confirm password visibility"
                       >
-                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        {showConfirmPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                       </button>
                     </div>
                   </div>
@@ -395,6 +433,7 @@ export default function AuthPage({ initialMode = 'signin', onClose, onModeChange
               </form>
             )}
           </div>
+        </BorderBeam>
       </div>
     </div>
   );
